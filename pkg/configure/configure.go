@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	helper "github.com/triopium/go_configure/pkg/helper"
+	"github.com/triopium/go_utils/pkg/helper"
 )
 
 // TODO: print usage for all commands at once using run main.go and all subcmds with help
