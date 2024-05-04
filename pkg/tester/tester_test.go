@@ -3,8 +3,6 @@ package helper
 import (
 	"fmt"
 	"testing"
-
-	"github.com/triopium/go_utils/pkg/helper"
 )
 
 var testerConfig = TesterConfig{
@@ -31,26 +29,26 @@ func TestSomething(t *testing.T) {
 func TestSomething2(t *testing.T) {
 	defer testerConfig.RecoverPanic(t)
 	testerConfig.InitTest(t, "/helper")
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 
 func TestABSimple(t *testing.T) {
 	kek := t.TempDir()
 	fmt.Println(kek)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 
 func TestPABC1(t *testing.T) {
 	t.Parallel()
 	kek := t.TempDir()
 	fmt.Println(kek)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 func TestPABC2(t *testing.T) {
 	t.Parallel()
 	kek := t.TempDir()
 	fmt.Println(kek)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 
 func TestAABfail1(t *testing.T) {
@@ -68,24 +66,24 @@ func TestAABfail2(t *testing.T) {
 func TestAABnofail1(t *testing.T) {
 	defer testerConfig.RecoverPanic(t)
 	testerConfig.InitTest(t)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 
 func TestAABnofail2(t *testing.T) {
 	defer testerConfig.RecoverPanic(t)
 	testerConfig.InitTest(t)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 
 func TestAAC1(t *testing.T) {
 	defer testerConfig.RecoverPanic(t)
 	testerConfig.InitTest(t)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 }
 
 func TestAAC2(t *testing.T) {
 	defer testerConfig.RecoverPanic(t)
 	testerConfig.InitTest(t)
-	helper.Sleeper(1, "s")
+	Sleeper(1, "s")
 	testerConfig.PrintResult("test ends")
 }

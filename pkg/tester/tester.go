@@ -10,8 +10,6 @@ import (
 	"sync"
 	"syscall"
 	"testing"
-
-	"github.com/triopium/go_utils/pkg/helper"
 )
 
 // TesterConfig
@@ -68,7 +66,7 @@ func (tc *TesterConfig) InitMain() {
 			panic(err)
 		}
 		tc.currentDir = curDir
-		helper.SetLogLevel(level, "json")
+		SetLogLevel(level, "json")
 		tc.testType = os.Getenv("GO_TEST_TYPE")
 		flag.Parse()
 		slog.Warn("test config initialized")
@@ -118,7 +116,7 @@ func (tc *TesterConfig) InitTempSrc(
 		return
 	}
 	if !tc.initializedTemp {
-		tc.TempDir = helper.DirectoryCreateTemporaryOrPanic(tc.TempDirName)
+		tc.TempDir = DirectoryCreateTemporaryOrPanic(tc.TempDirName)
 		packageName := filepath.Base(tc.currentDir)
 		tc.TempDataSource = filepath.Join(tc.TempDir, packageName, "SRC")
 		tc.TempDataDestination = filepath.Join(tc.TempDir, packageName, "DST")
@@ -131,18 +129,18 @@ func (tc *TesterConfig) InitTempSrc(
 		}
 		srcDir := filepath.Join(tc.TestDataSource, s)
 		dstDir := filepath.Join(tc.TempDataSource, s)
-		ok, err1 := helper.DirectoryExists(srcDir)
+		ok, err1 := DirectoryExists(srcDir)
 		if err1 != nil || !ok {
 			panic(err1)
 		}
-		ok, err2 := helper.DirectoryExists(dstDir)
+		ok, err2 := DirectoryExists(dstDir)
 		if ok {
 			continue
 		}
 		if err2 != nil {
 			panic(err2)
 		}
-		err_copy := helper.DirectoryCopy(
+		err_copy := DirectoryCopy(
 			srcDir, dstDir,
 			true, false, "", false,
 		)
@@ -155,7 +153,7 @@ func (tc *TesterConfig) InitTempSrc(
 // CleanuUP
 func (tc *TesterConfig) CleanuUP() {
 	if tc.initializedTemp {
-		helper.DirectoryDeleteOrPanic(tc.TempDir)
+		DirectoryDeleteOrPanic(tc.TempDir)
 	}
 }
 
