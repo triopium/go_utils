@@ -1,4 +1,4 @@
-package helper
+package configure
 
 import (
 	"flag"
