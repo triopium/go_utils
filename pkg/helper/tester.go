@@ -10,6 +10,8 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+
+	"github.com/triopium/go_utils/pkg/logging"
 )
 
 // TesterConfig
@@ -66,7 +68,7 @@ func (tc *TesterConfig) InitMain() {
 			panic(err)
 		}
 		tc.currentDir = curDir
-		SetLogLevel(level, "json")
+		logging.SetLogLevel(level, "json")
 		tc.testType = os.Getenv("GO_TEST_TYPE")
 		flag.Parse()
 		slog.Warn("test config initialized")
@@ -125,27 +127,34 @@ func (tc *TesterConfig) InitTempSrc(
 	for _, s := range testSubdir {
 		if s == "" {
 			panic(
-				"empty string passed as subdirectory is not allowed as safety measure")
+				"empty string passed as test subdirectory is not allowed as safety measure")
 		}
 		srcDir := filepath.Join(tc.TestDataSource, s)
 		dstDir := filepath.Join(tc.TempDataSource, s)
 		ok, err1 := DirectoryExists(srcDir)
+
 		if err1 != nil || !ok {
-			panic(err1)
+			err := fmt.Errorf(
+				"test data source dir path: %s exists %t, err: %w", srcDir, ok, err1)
+			panic(err)
 		}
 		ok, err2 := DirectoryExists(dstDir)
-		if ok {
-			continue
-		}
 		if err2 != nil {
-			panic(err2)
+			err := fmt.Errorf(
+				"test data source dir path: %s exists %t, err: %w", srcDir, ok, err1)
+			panic(err)
+		}
+		if ok {
+			// temp test subdir already exists
+			continue
 		}
 		err_copy := DirectoryCopy(
 			srcDir, dstDir,
 			true, false, "", false,
 		)
 		if err_copy != nil {
-			os.Exit(-1)
+			err := fmt.Errorf("cannot copy directory from %s to %s", srcDir, dstDir)
+			panic(err)
 		}
 	}
 }

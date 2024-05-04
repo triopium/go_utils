@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"testing"
 )
@@ -29,12 +30,14 @@ func TestCreateDirectory(t *testing.T) {
 	dstDir := tpDst("hello/jello")
 	err := os.MkdirAll(dstDir, 0700)
 	if err != nil {
-		t.Error(err)
+		errs := fmt.Errorf("creating %s: %w", dstDir, err)
+		t.Error(errs)
 	}
 	dstDir = tpDst("")
 	err = os.MkdirAll(dstDir, 0700)
 	if err != nil {
-		t.Error(err)
+		errs := fmt.Errorf("creating %s: %w", dstDir, err)
+		t.Error(errs)
 	}
 }
 

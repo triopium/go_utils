@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/triopium/go_utils/pkg/helper"
+	"github.com/triopium/go_utils/pkg/logging"
 )
 
 // TODO: print usage for all commands at once using run main.go and all subcmds with help
@@ -87,7 +88,7 @@ func (cc *CommandConfig) Init() {
 	if err != nil {
 		panic(err)
 	}
-	helper.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
+	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
 	cc.Values = rcfg
 	if flag.NArg() < 1 {
 		fmt.Println("version to do")
