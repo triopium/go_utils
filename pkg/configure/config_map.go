@@ -94,7 +94,6 @@ func (cc *CommandConfig) Init() {
 }
 
 func (cc *CommandConfig) VersionInfoAdd(info interface{}) {
-	fmt.Println("add", info)
 	cc.VersionInfo = info
 }
 
