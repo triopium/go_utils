@@ -14,11 +14,6 @@ import (
 
 // TODO: print usage for all commands at once using run main.go and all subcmds with help
 // TODO: implement validate flag value by function (check alloved values)
-var FlagsUsage = "Usage:\n"
-
-func Usage() {
-	fmt.Println(FlagsUsage)
-}
 
 type RootCfg struct {
 	Version     bool
@@ -53,10 +48,11 @@ var CommandRoot = CommandConfig{
 }
 
 type CommandConfig struct {
-	OptsMap map[string][5]interface{}
-	Opts    []FlagOption
-	Subs    Subcommands
-	Values  interface{}
+	OptsMap     map[string][5]interface{}
+	Opts        []FlagOption
+	Subs        Subcommands
+	Values      interface{}
+	VersionInfo interface{}
 }
 
 type FlagOption struct {
@@ -91,11 +87,19 @@ func (cc *CommandConfig) Init() {
 	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
 	cc.Values = rcfg
 	if flag.NArg() < 1 {
-		fmt.Println("version to do")
-		// VersionInfoPrint()
+		cc.VersionInfoPrint()
 		return
 	}
 	slog.Info("root config", "config", cc.Values)
+}
+
+func (cc *CommandConfig) VersionInfoAdd(info interface{}) {
+	fmt.Println("add", info)
+	cc.VersionInfo = info
+}
+
+func (cc *CommandConfig) VersionInfoPrint() {
+	fmt.Printf("%+v\n", cc.VersionInfo)
 }
 
 func (cc *CommandConfig) RunRoot() {
