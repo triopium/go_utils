@@ -29,3 +29,43 @@ func TestTable_MapTableHeaders(t *testing.T) {
 	// match := table.MatchRow("Široký Jan", "navrhující strana", "Levice")
 	fmt.Println(match)
 }
+
+func TestXLSXtableBuild(t *testing.T) {
+	type args struct {
+		fileName string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"simple", args{"/tmp/kek.xlsx"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := XLSXtableBuild(tt.args.fileName); (err != nil) != tt.wantErr {
+				t.Errorf("XLSXtableBuild() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestXLSXtableStreamSave(t *testing.T) {
+	type args struct {
+		filePath string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"simple", args{"/tmp/sream.xlsx"}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := XLSXtableStreamSave(tt.args.filePath); (err != nil) != tt.wantErr {
+				t.Errorf("XLSXtableStreamSave() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

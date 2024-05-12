@@ -1,6 +1,9 @@
 package files
 
 import (
+	"log/slog"
+	"strings"
+
 	"github.com/xuri/excelize/v2"
 )
 
@@ -85,4 +88,49 @@ func (t *Table) MatchRow(
 	colVal := row[columnIndex]
 	// slog.Warn("fuck", "rowval", rowHeaderValue, "val", value, "row", row)
 	return colVal == columnValue
+}
+
+func XLSXtableBuild(filePath string) error {
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			slog.Error("error closing table", "err", err.Error())
+		}
+	}()
+	_, err := f.NewSheet("Sheet1")
+	if err != nil {
+		return err
+	}
+	err = f.SetCellValue("Sheet1", "A1", "kek")
+	if err != nil {
+		return err
+	}
+	// excelize.OpenFile()
+	// excelize.CoordinatesToCellName()
+	// excelize.SetCellValue()
+
+	return f.SaveAs(filePath)
+}
+
+func XLSXtableStreamSave(filePath string) error {
+	file := excelize.NewFile()
+	streamWriter, err := file.NewStreamWriter("Sheet1")
+	if err != nil {
+		return err
+	}
+	row := make([]interface{}, 1)
+	row[0] = strings.Repeat("c", excelize.TotalCellChars+100)
+	err = streamWriter.SetRow("A1", row)
+	if err != nil {
+		return err
+	}
+	// row = make([]interface{}, 1)
+	// row[0] = []byte("Word")
+	// streamWriter.SetRow("A3", row)
+	streamWriter.Flush()
+	err = file.SaveAs(filePath)
+	if err != nil {
+		return err
+	}
+	return nil
 }
