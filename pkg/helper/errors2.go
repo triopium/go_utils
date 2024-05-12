@@ -11,26 +11,31 @@ type ErrMain struct {
 }
 
 type Errw struct {
-	BaseErr      error
-	Count        int
-	SubErrsSlice []*Errw
-	SubErrsMap   map[error]*Errw
+	BaseErr          error
+	ErrsDetailsSlice []any
+	ErrsDetailsMap   map[string]any
+	Count            int
+	SubErrsSlice     []*Errw
+	SubErrsMap       map[error]*Errw
 }
 
-func (er *Errw) addNew(err error) {
+func (er *Errw) addNew(err error, params ...any) {
 	eW := new(Errw)
 	eW.BaseErr = err
 	eW.Count++
+	eW.ErrsDetailsSlice = make([]any, 0)
+	eW.ErrsDetailsSlice = append(eW.ErrsDetailsSlice, params)
+	eW.ErrsDetailsMap = make(map[string]any)
 	er.SubErrsSlice = append(er.SubErrsSlice, eW)
 	er.SubErrsMap[err] = eW
 }
 
-func (er *Errw) Add(err error) {
+func (er *Errw) Add(err error, params ...any) {
 	// init
 	if er.SubErrsSlice == nil {
 		er.SubErrsSlice = make([]*Errw, 0, 3)
 		er.SubErrsMap = make(map[error]*Errw)
-		er.addNew(err)
+		er.addNew(err, params...)
 		return
 	}
 
@@ -38,15 +43,39 @@ func (er *Errw) Add(err error) {
 	_, ok := er.SubErrsMap[err]
 	if ok {
 		er.SubErrsMap[err].Count++
+		er.SubErrsMap[err].ErrsDetailsSlice = append(er.SubErrsMap[err].ErrsDetailsSlice, params)
 		return
 	}
-	er.addNew(err)
+	er.addNew(err, params...)
 }
 
 func (er *Errw) ErrorsReturn() error {
 	var res error
 	for _, sub := range er.SubErrsSlice {
-		out := fmt.Errorf("%d: %w", sub.Count, sub.BaseErr)
+		if len(sub.ErrsDetailsSlice) == 0 {
+			out := fmt.Errorf("%d: %w", sub.Count, sub.BaseErr)
+			res = errors.Join(res, out)
+			continue
+		}
+		out := fmt.Errorf("%d: %w: %v", sub.Count, sub.BaseErr, sub.ErrsDetailsSlice)
+		res = errors.Join(res, out)
+		// err := fmt.Errorf("%w; %w; %w", err, err2, err3)
+		// return errors.Join(e.Errors...)
+	}
+	return res
+}
+
+func (er *Errw) ErrorsReturnMap() error {
+	var res error
+	for _, sub := range er.SubErrsSlice {
+		sub.ErrsDetailsMap["kek"] = "jak"
+		sub.ErrsDetailsMap["sek"] = "tek"
+		if len(sub.ErrsDetailsMap) == 0 {
+			out := fmt.Errorf("%d: %w", sub.Count, sub.BaseErr)
+			res = errors.Join(res, out)
+			continue
+		}
+		out := fmt.Errorf("%d: %w: %v", sub.Count, sub.BaseErr, sub.ErrsDetailsMap)
 		res = errors.Join(res, out)
 		// err := fmt.Errorf("%w; %w; %w", err, err2, err3)
 		// return errors.Join(e.Errors...)
