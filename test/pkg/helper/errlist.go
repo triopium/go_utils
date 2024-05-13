@@ -13,6 +13,9 @@ var err1 = fmt.Errorf("test error")
 func Runner() (res error) {
 	errList := new(helper.ErrList)
 	defer errList.Handle(&res)
+	if true {
+		panic(err1)
+	}
 	errList.ErrorRaise(nil)
 	errList.ErrorAdd(err1)
 	errList.ErrorRaise(err1)
