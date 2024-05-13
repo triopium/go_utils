@@ -11,13 +11,13 @@ import (
 var err1 = fmt.Errorf("test error")
 
 func Runner() (res error) {
-	errMain := new(helper.ErrMain)
-	defer errMain.Handle(&res)
-	errMain.ErrorRaise(nil)
-	// errMain.ErrorAdd(err1)
-	errMain.ErrorRaise(err1)
-	errMain.ErrorRaise(nil)
-	return errMain.ErrorsReturn()
+	errList := new(helper.ErrList)
+	defer errList.Handle(&res)
+	errList.ErrorRaise(nil)
+	errList.ErrorAdd(err1)
+	errList.ErrorRaise(err1)
+	errList.ErrorRaise(nil)
+	return errList.ErrorsReturn()
 }
 
 func main() {

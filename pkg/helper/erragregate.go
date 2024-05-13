@@ -6,10 +6,6 @@ import (
 	"log/slog"
 )
 
-type ErrMain struct {
-	Errors []error
-}
-
 type Errw struct {
 	BaseErr          error
 	ErrsDetailsSlice []any
@@ -108,35 +104,3 @@ func (er *Errw) MaxUwrap(err error) (ret error) {
 }
 
 type ErrorAggregate map[string]int // function,line,count of errors
-
-// type count, variables
-
-func (e *ErrMain) Handle(err *error) {
-	if r := recover(); r != nil {
-		slog.Error(r.(string))
-		// *err = fmt.Errorf("kek")
-		*err = e.ErrorsReturn()
-	}
-}
-
-func (e *ErrMain) ErrorRaise(err error) {
-	if err != nil {
-		e.ErrorAdd(err)
-		panic(err.Error() + "fek")
-		// panic(e.ErrorsReturn().Error())
-	} else {
-		slog.Info("not raised")
-	}
-}
-
-func (e *ErrMain) ErrorAdd(err error) {
-	e.Errors = append(e.Errors, err)
-}
-
-func (e *ErrMain) ErrorsReturn() error {
-	// err := fmt.Errorf("%w; %w; %w", err, err2, err3)
-	if len(e.Errors) != 0 {
-		return errors.Join(e.Errors...)
-	}
-	return nil
-}
