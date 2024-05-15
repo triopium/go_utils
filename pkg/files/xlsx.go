@@ -76,6 +76,31 @@ func (t *Table) MapTableHeaders(
 	}
 }
 
+func CreateTableB(rows [][]string,
+	columnHeaderRow, primaryColumn int) *Table {
+	table := new(Table)
+	table.MapTableHeaders(rows, columnHeaderRow, primaryColumn)
+	table.Rows = rows[columnHeaderRow+1:][primaryColumn+1:]
+	return table
+}
+
+func (t *Table) MapTableHeadersB(
+	rows [][]string, columnsHeaderRow, rowsHeaderColumn int) {
+	t.RowHeaderToColumnMap = make(map[string][]string)
+	// Map rows
+	r := rows
+	i := columnsHeaderRow + 1
+	for k := i; k < len(r); k++ {
+		t.RowHeaderToColumnMap[r[k][rowsHeaderColumn]] = r[k][rowsHeaderColumn+1:]
+	}
+
+	t.ColumnHeaderMap = make(map[string]int)
+	// Map columns header columnName vs position
+	for j, val := range r[rowsHeaderColumn] {
+		t.ColumnHeaderMap[val] = j
+	}
+}
+
 func (t *Table) MatchRow(
 	rowHeaderValue, columnName, columnValue string) bool {
 	row, ok := t.RowHeaderToColumnMap[rowHeaderValue]

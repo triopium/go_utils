@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/triopium/go_utils/pkg/helper"
@@ -48,7 +49,7 @@ var CommandRoot = CommandConfig{
 }
 
 type CommandConfig struct {
-	OptsMap     map[string][5]interface{}
+	OptsMap     map[string][6]interface{}
 	Opts        []FlagOption
 	Subs        Subcommands
 	Values      interface{}
@@ -154,11 +155,16 @@ func (opt FlagDescription) Error(err error) {
 	panic(errMsg)
 }
 
-func CheckAllovedValues(flagName string, inp any, alloved interface{}) {
+func CheckAllovedValues(
+	flagName string, inp any, alloved interface{}, allovedFunc func(any) bool) {
 	var match bool
-	if alloved == nil {
-		return
+	// var res any = inp
+	if allovedFunc != nil {
+		if !allovedFunc(inp) {
+			panic(inp)
+		}
 	}
+
 	switch t := alloved.(type) {
 	case []interface{}:
 		if len(t) == 0 {
@@ -170,7 +176,6 @@ func CheckAllovedValues(flagName string, inp any, alloved interface{}) {
 				break
 			}
 		}
-	case func(any) bool:
 	default:
 		err := fmt.Errorf("unknow type of alloved definition: %v", t)
 		panic(err)
@@ -195,7 +200,7 @@ func (opt *FlagOption) DeclareUsage() {
 
 func (cc *CommandConfig) DeclareFlags() {
 	slog.Debug("declaring flags")
-	cc.OptsMap = make(map[string][5]interface{})
+	cc.OptsMap = make(map[string][6]interface{})
 	for i := range cc.Opts {
 		slog.Debug("declaring flag", "opt", cc.Opts[i])
 		res := cc.Opts[i].DeclareFlag()
@@ -206,7 +211,7 @@ func (cc *CommandConfig) DeclareFlags() {
 	flag.Usage = Usage
 }
 
-func (opt *FlagOption) DeclareFlag() [5]interface{} {
+func (opt *FlagOption) DeclareFlag() [6]interface{} {
 	var def, long, short interface{}
 	opt.DeclareUsage()
 	switch opt.FlagDescription.Type {
@@ -226,6 +231,10 @@ func (opt *FlagOption) DeclareFlag() [5]interface{} {
 		def = opt.Default
 		long = flag.String(opt.LongFlag, opt.Default, opt.Descripton)
 		short = flag.String(opt.ShortFlag, opt.Default, opt.Descripton)
+	case "[]string":
+		def = opt.Default
+		long = flag.String(opt.LongFlag, opt.Default, opt.Descripton)
+		short = flag.String(opt.ShortFlag, opt.Default, opt.Descripton)
 	case "date":
 		def = opt.Default
 		long = flag.String(opt.LongFlag, opt.Default, opt.Descripton)
@@ -234,7 +243,7 @@ func (opt *FlagOption) DeclareFlag() [5]interface{} {
 		err := fmt.Errorf("unknow flag type: %s", opt.FlagDescription.Type)
 		opt.Error(err)
 	}
-	return [5]interface{}{def, long, short, "", opt.AllovedValues}
+	return [6]interface{}{def, long, short, "", opt.AllovedValues, opt.FuncMatch}
 }
 
 func (cc *CommandConfig) ParseFlags(iface interface{}) error {
@@ -243,6 +252,7 @@ func (cc *CommandConfig) ParseFlags(iface interface{}) error {
 	if vof.Kind() != reflect.Ptr || vof.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("Invalid input: not a pointer to a struct")
 	}
+
 	vofe := vof.Elem()
 	n := vofe.NumField()
 	for i := 0; i < n; i++ {
@@ -257,23 +267,39 @@ func (cc *CommandConfig) ParseFlags(iface interface{}) error {
 		def := vals[0]
 		long := vals[1]
 		short := vals[2]
-		alloved := vals[4]
-		switch field.Type.Name() {
-		case "bool":
+		allovedVars := vals[4]
+		allovedFunc := vals[5]
+		// switch field.Type.Name() {
+		// v := field.Interface()
+		v := vofe.Field(i).Interface()
+		switch v.(type) {
+		case bool:
 			vals := []bool{*long.(*bool), *short.(*bool), *def.(*bool)}
 			res := GetBoolValuePriority(vals...)
 			vofe.Field(i).SetBool(res)
-		case "int":
+		case int:
 			vals := []int{*long.(*int), *short.(*int), *def.(*int)}
 			res := GetIntValuePriority(vals...)
-			CheckAllovedValues(optName, res, alloved)
+			CheckAllovedValues(
+				optName, res, allovedVars, allovedFunc.(func(any) bool))
 			vofe.Field(i).SetInt(int64(res))
-		case "string":
+		case string:
 			vals := []string{*long.(*string), *short.(*string), def.(string)}
 			res := GetStringValuePriority(vals...)
-			CheckAllovedValues(optName, res, alloved)
+			CheckAllovedValues(
+				optName, res, allovedVars, allovedFunc.(func(any) bool))
 			vofe.Field(i).SetString(res)
-		case "Time":
+		case []string:
+			vals := []string{*long.(*string), *short.(*string), def.(string)}
+			res := GetStringValuePriority(vals...)
+			strSlice := strings.Split(res, ",")
+			rv := reflect.ValueOf(strSlice)
+			vofe.Field(i).Set(rv)
+			// v := slice.Index(0)
+			// v.SetString("kek")
+			// slice := reflect.MakeSlice(reflect.TypeOf([]string{}), 2, 2)
+			// reflect.Copy(slice, rv)
+		case time.Time:
 			vals := []string{*long.(*string), *short.(*string), def.(string)}
 			res := GetStringValuePriority(vals...)
 			if res == "" {
@@ -285,11 +311,15 @@ func (cc *CommandConfig) ParseFlags(iface interface{}) error {
 			}
 			vofe.Field(i).Set(reflect.ValueOf(date))
 		default:
-			panic(fmt.Errorf("flag type not implemented: %s", field.Type.Name()))
+			// 	// _ = reflect.MakeSlice(reflect.TypeOf([]int{}), 1, 1)
+			// 	// panic(fmt.Errorf("flag type not implemented: %s", field.Type.Name()))
+			panic(fmt.Errorf("flag type not implemented: %s", field.Type))
 		}
 	}
 	return nil
 }
+
+// func SetStringSli
 
 // OPTION GETERS
 // GetBoolValuePriority return value according to priority. Priority is given in desceding. Last value is default value.
