@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/triopium/go_utils/pkg/helper"
+	"github.com/triopium/go_utils/pkg/logging"
 )
 
 type RootConfig struct {
@@ -62,9 +63,17 @@ var CommanderRoot = CommanderConfig{
 		Opt[int]{
 			OptDesc{"verbose", "v", "0", "int",
 				"Level of verbosity."}, nil, nil},
+		Opt[string]{
+			OptDesc{"logType", "logt", "json", "string",
+				"Type of logs formating."},
+			[]any{"json", "plain"}, nil},
 		Opt[bool]{
 			OptDesc{"dryRun", "dr", "false", "bool",
 				"Dry run, useful for tests."}, nil, nil},
+		Opt[bool]{
+			OptDesc{"debugConfig", "dc", "false", "bool",
+				"Debug/print flag values"},
+			[]any{"json", "plain"}, nil},
 		// Opt[string]{
 		// 	OptDesc{
 		// 		"SourceDirectory", "srcDir", "", "string",
@@ -83,7 +92,7 @@ func (cc *CommanderConfig) Init() {
 	if err != nil {
 		panic(err)
 	}
-	// logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
+	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
 	// cc.Values = rcfg
 	// if flag.NArg() < 1 {
 	// 	cc.VersionInfoPrint()
@@ -102,7 +111,7 @@ func (cc *CommanderConfig) VersionInfoPrint() {
 }
 
 func DeclareFlagHandle[T any](
-	s interface{}, myMap map[string][6]interface{}) [6]interface{} {
+	s interface{}, myMap map[string][6]interface{}) {
 	var def, long, short, alloved, funcMatch interface{}
 	var optName string
 	switch o := s.(type) {
@@ -131,7 +140,6 @@ func DeclareFlagHandle[T any](
 		panic("no match")
 	}
 	myMap[optName] = [6]interface{}{def, long, short, "", alloved, funcMatch}
-	return [6]interface{}{def, long, short, "", alloved, funcMatch}
 }
 
 func (cc *CommanderConfig) DeclareFlags() {
@@ -192,12 +200,15 @@ func (cc *CommanderConfig) ParseFlag(
 	case string:
 		vals := []string{*long.(*string), *short.(*string), def.(string)}
 		res := GetStringValuePriority(vals...)
-		fun := allovedFunc.(func(string) (bool, error))
-		ok, err = fun(res)
-		if ok {
-			vofe.Field(index).SetString(res)
+		if allovedFunc != nil {
+			fun := allovedFunc.(func(string) (bool, error))
+			ok, err = fun(res)
+			if ok {
+				vofe.Field(index).SetString(res)
+			}
 		}
 		value = res
+		vofe.Field(index).SetString(res)
 	case int:
 		vals := []int{*long.(*int), *short.(*int), *def.(*int)}
 		res := GetIntValuePriority(vals...)
