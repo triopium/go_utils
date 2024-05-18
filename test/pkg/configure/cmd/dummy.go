@@ -11,8 +11,9 @@ var commandDummyConfig = configure.CommandConfig{}
 
 func commandDummyConfigure() {
 	add := commandDummyConfig.AddOption
-	// add("SourceDirectory", "srcdir", "", "string",
-	// "Source rundown file.", nil, nil)
+	add("SourceDirectory", "srcdir", "", "string",
+		// "Source directory must exists.", nil, helper.DirectoryExists)
+		"Source directory must exists.", nil, nil)
 	add("DateFrom", "df", "", "date",
 		"Filter rundowns from date", nil, nil)
 	add("Multiple", "m", "", "[]string",
@@ -40,4 +41,7 @@ func RunCommandDummy() {
 	commandDummyConfigure()
 	commandDummyConfig.RunSub(&cmdVars)
 	fmt.Printf("effective command vars %+v\n", cmdVars)
+	if cmdVars.Multiple == nil {
+		fmt.Println("is nil")
+	}
 }

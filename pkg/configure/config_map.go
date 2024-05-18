@@ -56,10 +56,16 @@ type CommandConfig struct {
 	VersionInfo interface{}
 }
 
+// type functor[V any](bool,error)
+// type Func func[V int|string](v V) bool
+
 type FlagOption struct {
 	FlagDescription
 	AllovedValues []any
-	FuncMatch     func(any) bool `json:"-"`
+	// FuncMatch     func[V int|string](v V) bool
+	FuncMatch func(any) bool
+	// FuncMatch     func(any) (bool, error) `json:"-"`
+	// FuncMatch     ConfigVariableFunctionCheck `json:"-"`
 }
 
 type FlagDescription struct {
@@ -68,11 +74,6 @@ type FlagDescription struct {
 	Default    string
 	Type       string
 	Descripton string
-}
-
-type OptsDec struct {
-	Long, Short, Default interface{}
-	Alloved              interface{}
 }
 
 type Subcommands map[string]func()
@@ -138,11 +139,11 @@ func (cc *CommandConfig) AddSub(subName string, subF func()) {
 
 func (cc *CommandConfig) AddOption(
 	long, short, defValue, typeValue, descr string,
-	alloved []any, funcM func(any) bool) {
+	alloved []any, cfgVarFunc func(any) bool) {
 	opt := FlagOption{
 		FlagDescription: FlagDescription{
 			long, short, defValue, typeValue, descr,
-		}, AllovedValues: alloved, FuncMatch: funcM}
+		}, AllovedValues: alloved, FuncMatch: cfgVarFunc}
 	cc.Opts = append(cc.Opts, opt)
 }
 
@@ -292,6 +293,9 @@ func (cc *CommandConfig) ParseFlags(iface interface{}) error {
 		case []string:
 			vals := []string{*long.(*string), *short.(*string), def.(string)}
 			res := GetStringValuePriority(vals...)
+			if res == "" {
+				continue
+			}
 			strSlice := strings.Split(res, ",")
 			rv := reflect.ValueOf(strSlice)
 			vofe.Field(i).Set(rv)
@@ -311,15 +315,11 @@ func (cc *CommandConfig) ParseFlags(iface interface{}) error {
 			}
 			vofe.Field(i).Set(reflect.ValueOf(date))
 		default:
-			// 	// _ = reflect.MakeSlice(reflect.TypeOf([]int{}), 1, 1)
-			// 	// panic(fmt.Errorf("flag type not implemented: %s", field.Type.Name()))
 			panic(fmt.Errorf("flag type not implemented: %s", field.Type))
 		}
 	}
 	return nil
 }
-
-// func SetStringSli
 
 // OPTION GETERS
 // GetBoolValuePriority return value according to priority. Priority is given in desceding. Last value is default value.
