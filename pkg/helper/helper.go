@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -65,4 +66,17 @@ func GetCommonPath(filePath, relPath string) (string, error) {
 		res = filepath.Clean(res)
 	}
 	return res, nil
+}
+
+func StringToIntSlice(slice, sep string) ([]int, error) {
+	var err error
+	a := strings.Split(slice, sep)
+	out := make([]int, len(a))
+	for i := 0; i < len(a); i++ {
+		out[i], err = strconv.Atoi(a[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
 }

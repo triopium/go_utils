@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/triopium/go_utils/pkg/helper"
 )
 
 type FlagsMap map[string]map[string]interface{}
@@ -23,37 +21,6 @@ func SetField(rv reflect.Value, value any) error {
 	}
 	rv.Set(reflect.ValueOf(value))
 	return nil
-}
-
-func GetStringValueByPriority(
-	longFlagValue, shortFlagValue, envValue, defaultValue string) string {
-	res := defaultValue
-	if longFlagValue != defaultValue {
-		res = longFlagValue
-	}
-	if shortFlagValue != defaultValue {
-		res = shortFlagValue
-	}
-	return res
-}
-
-func GetBoolValueByPriority(
-	longFlagValue, shortFlagValue, envValue, defaultValue bool) bool {
-	res := helper.XOR(defaultValue, shortFlagValue)
-	res = helper.XOR(res, longFlagValue)
-	return res
-}
-
-func GetIntValueByPriority(
-	longFlagValue, shortFlagValue, envValue, defaultValue int) int {
-	res := defaultValue
-	if longFlagValue != defaultValue {
-		res = longFlagValue
-	}
-	if shortFlagValue != defaultValue {
-		res = shortFlagValue
-	}
-	return res
 }
 
 func DeclareFlags(config interface{}) (FlagsMap, error) {
