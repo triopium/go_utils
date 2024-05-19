@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"reflect"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/triopium/go_utils/pkg/helper"
 	"github.com/triopium/go_utils/pkg/logging"
@@ -58,6 +60,42 @@ func (cc *CommanderConfig) AddOption2(
 	long, short, defValue, typeValue, descr string,
 	alloved, funcMatch any) {
 	switch typeValue {
+	case "bool":
+		opt := Opt[bool]{}
+		opt.LongFlag = long
+		opt.ShortFlag = short
+		opt.Default = defValue
+		opt.Type = typeValue
+		opt.Help = descr
+		if funcMatch != nil {
+			opt.FuncMatch = funcMatch.(func(bool) (bool, error))
+		}
+		cc.Opts = append(cc.Opts, opt)
+	case "int":
+		opt := Opt[int]{}
+		opt.LongFlag = long
+		opt.ShortFlag = short
+		opt.Default = defValue
+		opt.Type = typeValue
+		opt.Help = descr
+		if funcMatch != nil {
+			opt.FuncMatch = funcMatch.(func(int) (bool, error))
+		}
+		if alloved != nil {
+			opt.AllovedValues = alloved.([]int)
+		}
+		cc.Opts = append(cc.Opts, opt)
+	case "[]int":
+		opt := Opt[[]int]{}
+		opt.LongFlag = long
+		opt.ShortFlag = short
+		opt.Default = defValue
+		opt.Type = typeValue
+		opt.Help = descr
+		if funcMatch != nil {
+			opt.FuncMatch = funcMatch.(func([]int) (bool, error))
+		}
+		cc.Opts = append(cc.Opts, opt)
 	case "string":
 		opt := Opt[string]{}
 		opt.LongFlag = long
@@ -70,6 +108,35 @@ func (cc *CommanderConfig) AddOption2(
 		}
 		if alloved != nil {
 			opt.AllovedValues = alloved.([]string)
+		}
+		cc.Opts = append(cc.Opts, opt)
+	case "[]string":
+		opt := Opt[[]string]{}
+		opt.LongFlag = long
+		opt.ShortFlag = short
+		opt.Default = defValue
+		opt.Type = typeValue
+		opt.Help = descr
+		if funcMatch != nil {
+			opt.FuncMatch = funcMatch.(func([]string) (bool, error))
+		}
+		// if alloved != nil {
+		// TODO
+		// opt.AllovedValues = alloved.([][]string)
+		// }
+		cc.Opts = append(cc.Opts, opt)
+	case "date":
+		opt := Opt[time.Time]{}
+		opt.LongFlag = long
+		opt.ShortFlag = short
+		opt.Default = defValue
+		opt.Type = typeValue
+		opt.Help = descr
+		if funcMatch != nil {
+			opt.FuncMatch = funcMatch.(func(time.Time) (bool, error))
+		}
+		if alloved != nil {
+			opt.AllovedValues = alloved.([]time.Time)
 		}
 		cc.Opts = append(cc.Opts, opt)
 	}
@@ -202,7 +269,44 @@ func DeclareFlagHandle[T any](
 		}
 		optName = helper.FirstLetterToUppercase(o.LongFlag)
 		o.DeclareUsage()
+	case Opt[[]int]:
+		def = o.Default
+		long = flag.String(o.LongFlag, o.Default, o.Help)
+		short = flag.String(o.ShortFlag, o.Default, o.Help)
+		if o.AllovedValues != nil {
+			alloved = o.AllovedValues
+		}
+		if o.FuncMatch != nil {
+			funcMatch = o.FuncMatch
+		}
+		optName = helper.FirstLetterToUppercase(o.LongFlag)
+		o.DeclareUsage()
 	case Opt[string]:
+		slog.Info("declaring flag", "optname", o.LongFlag)
+		def = o.Default
+		long = flag.String(o.LongFlag, o.Default, o.Help)
+		short = flag.String(o.ShortFlag, o.Default, o.Help)
+		if o.AllovedValues != nil {
+			alloved = o.AllovedValues
+		}
+		if o.FuncMatch != nil {
+			funcMatch = o.FuncMatch
+		}
+		optName = helper.FirstLetterToUppercase(o.LongFlag)
+		o.DeclareUsage()
+	case Opt[[]string]:
+		def = o.Default
+		long = flag.String(o.LongFlag, o.Default, o.Help)
+		short = flag.String(o.ShortFlag, o.Default, o.Help)
+		if o.AllovedValues != nil {
+			alloved = o.AllovedValues
+		}
+		if o.FuncMatch != nil {
+			funcMatch = o.FuncMatch
+		}
+		optName = helper.FirstLetterToUppercase(o.LongFlag)
+		o.DeclareUsage()
+	case Opt[time.Time]:
 		def = o.Default
 		long = flag.String(o.LongFlag, o.Default, o.Help)
 		short = flag.String(o.ShortFlag, o.Default, o.Help)
@@ -291,7 +395,6 @@ func (cc *CommanderConfig) ParseFlag(
 		allovedVars = nil
 	} else {
 		allovedVars = vals[4]
-		slog.Info("fuckadded vals", "name", optName)
 	}
 	if vals[5] == nil {
 		allovedFunc = nil
@@ -311,15 +414,57 @@ func (cc *CommanderConfig) ParseFlag(
 		ch := Checker[string]{allovedVars, allovedFunc}
 		ch.CheckAlloved(res)
 		vofe.Field(index).SetString(res)
+	case []string:
+		vals := []string{*long.(*string), *short.(*string), def.(string)}
+		res := GetStringValuePriority(vals...)
+		strSlice := strings.Split(res, ",")
+		ch := CheckerUn[[]string]{allovedVars, allovedFunc}
+		ch.CheckAlloved(strSlice)
+		rv := reflect.ValueOf(strSlice)
+		vofe.Field(index).Set(rv)
 	case int:
 		vals := []int{*long.(*int), *short.(*int), *def.(*int)}
 		res := GetIntValuePriority(vals...)
-		slog.Info("parsing flag", "name", optName, "value", res)
 		vofe.Field(index).SetInt(int64(res))
+	case []int:
+		vals := []string{*long.(*string), *short.(*string), def.(string)}
+		res := GetStringValuePriority(vals...)
+		out, err := helper.StringToIntSlice(res, ",")
+		if err != nil {
+			panic(fmt.Errorf("%w: %s", err, res))
+		}
+		ch := CheckerUn[[]int]{allovedVars, allovedFunc}
+		ch.CheckAlloved(out)
+		rv := reflect.ValueOf(out)
+		vofe.Field(index).Set(rv)
+	case time.Time:
+		vals := []string{*long.(*string), *short.(*string), def.(string)}
+		res := GetStringValuePriority(vals...)
+		ch := Checker[time.Time]{allovedVars, allovedFunc}
+		date, err := helper.ParseStringDate(res, time.Local)
+		if err != nil {
+			panic(fmt.Errorf("%w: %s", err, res))
+		}
+		ch.CheckAlloved(date)
+		vofe.Field(index).Set(reflect.ValueOf(date))
 	default:
 		return fmt.Errorf("unknow flag type: %T", v)
 	}
 	return nil
+}
+
+type CheckerUn[T any] struct {
+	AllovedVals any
+	AllovedFunc any
+}
+
+func (ch *CheckerUn[T]) CheckAlloved(inp any) {
+	if ch.AllovedFunc != nil {
+		_, err := ch.AllovedFunc.(func(T) (bool, error))(inp.(T))
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // type Checker[T any] struct {
