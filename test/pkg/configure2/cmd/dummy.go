@@ -4,32 +4,30 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/triopium/go_utils/pkg/configure"
+	c "github.com/triopium/go_utils/pkg/configure"
 	"github.com/triopium/go_utils/pkg/helper"
 )
 
-var commanderDummyConfig = configure.CommanderConfig{}
+var commanderDummyConfig = c.CommanderConfig{}
 
 func commanderDummyConfigure() {
-	add := commanderDummyConfig.AddOption2
-	add("SourceDirectory", "srcDir", "/tmp", "string",
+	add := commanderDummyConfig.AddOption
+	add("SourceDirectory", "srcDir", "/tmp", "string", "",
 		"Source directory", []string{"/tmp", "/home"}, helper.DirectoryExists)
-	add("GirlNames", "gn", "jana,petra", "[]string",
+	add("GirlNames", "gn", "jana,petra", "[]string", "",
 		"Specified names", nil, AllovedNames)
-	add("DateFrom", "df", "2020", "date", "date from", nil, nil)
-	add("Resume", "re", "true", "bool", "should resume?", nil, nil)
-	add("Count", "cn", "10", "int", "count", nil, nil)
-	add("NumberSlice", "ns", "10,12", "[]int", "number slice", nil, nil)
-	// "Source directory", []any{"jak", "tak"}, helper.DirectoryExists)
-	// opt := configure.Opt[string]{}
-	// add("DateFrom", "df", "", "date",
-	// "Filter rundowns from date", nil, nil)
-	// add("Multiple", "m", "", "[]string",
-	// "Multiple choices", nil, nil)
-	// add("ChoseVar", "chv", "", "string",
-	// "Filter rundowns from date", []any{"kek", "lek"}, nil)
-	// add("ChoseFunc", "chf", "", "string",
-	// "Filter rundowns from date", nil, ChooseFunction)
+	add("DateFrom", "df", "2020", "date", "",
+		"date from", nil, nil)
+	add("Resume", "re", "true", "bool", "",
+		"should resume?", nil, nil)
+	add("Count", "cn", "10", "int", "",
+		"count", nil, nil)
+	add("NumberSlice", "ns", "10,12", "[]int", "",
+		"number slice", nil, nil)
+	add("FileName", "fn", "", "string", "",
+		"Source file name", nil, helper.FileExists)
+	add("SourceDirectorySpecial", "sds", "", "string", c.NotNill,
+		"Source file name", nil, helper.DirectoryExists)
 }
 
 func AllovedNames(input []string) (bool, error) {
@@ -52,12 +50,14 @@ func ChooseFunction(in any) bool {
 }
 
 type commandDummyVars struct {
-	SourceDirectory string
-	GirlNames       []string
-	DateFrom        time.Time
-	Resume          bool
-	Count           int
-	NumberSlice     []int
+	SourceDirectory        string
+	GirlNames              []string
+	DateFrom               time.Time
+	Resume                 bool
+	Count                  int
+	NumberSlice            []int
+	FileName               string
+	SourceDirectorySpecial string
 	// GirlNames       []string
 	// ChoseVar        string
 	// ChoseFunc       string

@@ -13,6 +13,10 @@ import (
 	"github.com/triopium/go_utils/pkg/logging"
 )
 
+const (
+	NotNill string = "not_nill"
+)
+
 type RootConfig struct {
 	Version     bool
 	Verbose     int
@@ -26,6 +30,7 @@ type OptDesc struct {
 	ShortFlag string
 	Default   string
 	Type      string
+	Spec      string
 	Help      string
 }
 
@@ -52,12 +57,12 @@ func (o *Opt[T]) Error(err error) {
 	panic(errMsg)
 }
 
-func (cc *CommanderConfig) AddOption(o any) {
+func (cc *CommanderConfig) AddOptionSimple(o any) {
 	cc.Opts = append(cc.Opts, o)
 }
 
-func (cc *CommanderConfig) AddOption2(
-	long, short, defValue, typeValue, descr string,
+func (cc *CommanderConfig) AddOption(
+	long, short, defValue, typeValue, spec, descr string,
 	alloved, funcMatch any) {
 	switch typeValue {
 	case "bool":
@@ -67,6 +72,7 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Default = defValue
 		opt.Type = typeValue
 		opt.Help = descr
+		opt.Spec = spec
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func(bool) (bool, error))
 		}
@@ -78,6 +84,7 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Default = defValue
 		opt.Type = typeValue
 		opt.Help = descr
+		opt.Spec = spec
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func(int) (bool, error))
 		}
@@ -92,6 +99,7 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Default = defValue
 		opt.Type = typeValue
 		opt.Help = descr
+		opt.Spec = spec
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func([]int) (bool, error))
 		}
@@ -103,6 +111,7 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Default = defValue
 		opt.Type = typeValue
 		opt.Help = descr
+		opt.Spec = spec
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func(string) (bool, error))
 		}
@@ -117,6 +126,7 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Default = defValue
 		opt.Type = typeValue
 		opt.Help = descr
+		opt.Spec = spec
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func([]string) (bool, error))
 		}
@@ -132,6 +142,7 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Default = defValue
 		opt.Type = typeValue
 		opt.Help = descr
+		opt.Spec = spec
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func(time.Time) (bool, error))
 		}
@@ -145,21 +156,21 @@ func (cc *CommanderConfig) AddOption2(
 var CommanderRoot = CommanderConfig{
 	Opts: []any{
 		Opt[bool]{
-			OptDesc{"version", "V", "false", "bool",
+			OptDesc{"version", "V", "false", "bool", "",
 				"Version of program."}, nil, nil},
 		Opt[int]{
-			OptDesc{"verbose", "v", "0", "int",
+			OptDesc{"verbose", "v", "0", "int", "",
 				"Level of verbosity."}, nil, nil},
 		Opt[string]{
-			OptDesc{"logType", "logt", "json", "string",
+			OptDesc{"logType", "logt", "json", "string", "",
 				"Type of logs formating."},
 			[]string{"json", "plain"}, nil},
 		// nil, nil},
 		Opt[bool]{
-			OptDesc{"dryRun", "dr", "false", "bool",
+			OptDesc{"dryRun", "dr", "false", "bool", "",
 				"Dry run, useful for tests. Avoid any pernament changes to filesystem or any expensive tasks"}, nil, nil},
 		Opt[bool]{
-			OptDesc{"debugConfig", "dc", "false", "bool",
+			OptDesc{"debugConfig", "dc", "false", "bool", "",
 				"Debug/print flag values"},
 			nil, nil},
 		// Opt[string]{
@@ -238,6 +249,7 @@ func DeclareFlagHandle[T any](
 	s interface{}, myMap map[string][6]interface{}) {
 	var def, long, short, alloved, funcMatch interface{}
 	var optName string
+	var spec string
 	switch o := s.(type) {
 	case Opt[bool]:
 		b, err := strconv.ParseBool(o.Default)
@@ -292,6 +304,7 @@ func DeclareFlagHandle[T any](
 		if o.FuncMatch != nil {
 			funcMatch = o.FuncMatch
 		}
+		spec = o.Spec
 		optName = helper.FirstLetterToUppercase(o.LongFlag)
 		o.DeclareUsage()
 	case Opt[[]string]:
@@ -321,7 +334,8 @@ func DeclareFlagHandle[T any](
 	default:
 		panic("no match")
 	}
-	myMap[optName] = [6]interface{}{def, long, short, "", alloved, funcMatch}
+	// myMap[optName] = [6]interface{}{def, long, short, "", alloved, funcMatch}
+	myMap[optName] = [6]interface{}{def, long, short, spec, alloved, funcMatch}
 }
 
 func (cc *CommanderConfig) DeclareFlags() {
@@ -336,7 +350,7 @@ func (cc *CommanderConfig) DeclareFlags() {
 }
 
 func (o *Opt[T]) DeclareUsage() {
-	slog.Info("declare usaage")
+	slog.Info("declare usage")
 	fd := o.OptDesc
 	if o.AllovedValues == nil {
 		format := "-%s, -%s\n\t%s\n\n"
@@ -391,6 +405,7 @@ func (cc *CommanderConfig) ParseFlag(
 	def := vals[0]
 	long := vals[1]
 	short := vals[2]
+	spec := vals[3].(string)
 	if vals[4] == nil {
 		allovedVars = nil
 	} else {
@@ -411,6 +426,12 @@ func (cc *CommanderConfig) ParseFlag(
 	case string:
 		valsp := []string{*long.(*string), *short.(*string), def.(string)}
 		res := GetStringValuePriority(valsp...)
+		if spec == NotNill && res == "" {
+			panic(fmt.Errorf("flag: %s value cannot be empty", optName))
+		}
+		if res == "" {
+			return nil
+		}
 		ch := Checker[string]{allovedVars, allovedFunc}
 		ch.CheckAlloved(res)
 		vofe.Field(index).SetString(res)
