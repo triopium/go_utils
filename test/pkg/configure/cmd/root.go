@@ -18,12 +18,13 @@ var VersionInfo = configure.VersionInfo{
 	GitCommit: BuildGitCommit,
 }
 
-// var commandRootConfig = configure.CommanderConfig{}
-var commandRootConfig = configure.CommanderRoot
+var commandRootConfig = configure.CommandConfig{}
+
+// var commandRootConfig = configure.CommanderRoot
 
 func CommandRootRun() {
 	commandRootConfig.VersionInfoAdd(&VersionInfo)
 	commandRootConfig.Init()
-	// commandRootConfig.AddSub("dummy", RunCommandDummy)
-	// commandRootConfig.RunRoot()
+	commandRootConfig.AddSub("dummy", RunCommandDummy)
+	commandRootConfig.RunRoot()
 }

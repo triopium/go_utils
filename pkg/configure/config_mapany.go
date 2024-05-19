@@ -21,17 +21,17 @@ type RootConfig struct {
 }
 
 type OptDesc struct {
-	LongFlag   string
-	ShortFlag  string
-	Default    string
-	Type       string
-	Descripton string
+	LongFlag  string
+	ShortFlag string
+	Default   string
+	Type      string
+	Help      string
 }
 
 type Opt[T any] struct {
 	OptDesc
-	Alloved   []any
-	FuncMatch func(v T) (bool, error)
+	AllovedValues []T
+	FuncMatch     func(v T) (bool, error)
 }
 
 type CommanderConfig struct {
@@ -55,6 +55,24 @@ func (cc *CommanderConfig) AddOption(o any) {
 	cc.Opts = append(cc.Opts, o)
 }
 
+func (cc *CommanderConfig) AddOption2(
+	long, short, defValue, typeValue, descr string,
+	alloved, funcMatch any) {
+	switch typeValue {
+	case "string":
+		opt := Opt[string]{}
+		opt.LongFlag = long
+		opt.ShortFlag = short
+		opt.Default = defValue
+		opt.Type = typeValue
+		opt.Help = descr
+		if funcMatch != nil {
+			opt.FuncMatch = funcMatch.(func(string) (bool, error))
+		}
+		cc.Opts = append(cc.Opts, opt)
+	}
+}
+
 var CommanderRoot = CommanderConfig{
 	Opts: []any{
 		Opt[bool]{
@@ -66,14 +84,15 @@ var CommanderRoot = CommanderConfig{
 		Opt[string]{
 			OptDesc{"logType", "logt", "json", "string",
 				"Type of logs formating."},
-			[]any{"json", "plain"}, nil},
+			[]string{"json", "plain"}, nil},
+		// nil, nil},
 		Opt[bool]{
 			OptDesc{"dryRun", "dr", "false", "bool",
-				"Dry run, useful for tests."}, nil, nil},
+				"Dry run, useful for tests. Avoid any pernament changes to filesystem or any expensive tasks"}, nil, nil},
 		Opt[bool]{
 			OptDesc{"debugConfig", "dc", "false", "bool",
 				"Debug/print flag values"},
-			[]any{"json", "plain"}, nil},
+			nil, nil},
 		// Opt[string]{
 		// 	OptDesc{
 		// 		"SourceDirectory", "srcDir", "", "string",
@@ -93,13 +112,49 @@ func (cc *CommanderConfig) Init() {
 		panic(err)
 	}
 	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
-	// cc.Values = rcfg
-	// if flag.NArg() < 1 {
-	// 	cc.VersionInfoPrint()
-	// 	return
-	// }
-	// slog.Info("root config", "config", cc.Values)
+	cc.Values = rcfg
+	if flag.NArg() < 1 {
+		cc.VersionInfoPrint()
+		return
+	}
 	slog.Info("root config", "config", rcfg)
+}
+
+func (cc *CommanderConfig) RunRoot() {
+	slog.Info("running root")
+	subCmdName := flag.Arg(0)
+	if subCmdName == "" {
+		return
+	}
+	slog.Info("calling sub", "name", subCmdName)
+	subCmdFunc, ok := cc.Subs[subCmdName]
+	if !ok {
+		panic(fmt.Errorf("unknown subcommand: %s", subCmdName))
+	}
+	subCmdFunc()
+}
+
+func (cc *CommanderConfig) AddSub(subName string, subF func()) {
+	slog.Info("subcommand added", "subname", subName)
+	if cc.Subs == nil {
+		cc.Subs = make(Subcommands)
+	}
+	cc.Subs[subName] = subF
+}
+
+func (cc *CommanderConfig) RunSub(intf interface{}) {
+	subcmd := flag.Arg(0)
+	slog.Info("subcommand called", "subcommand", subcmd)
+	FlagsUsage = fmt.Sprintf("subcommand: %s\n", subcmd)
+	cc.DeclareFlags()
+	err := flag.CommandLine.Parse(flag.Args()[1:])
+	if err != nil {
+		panic(err)
+	}
+	err = cc.ParseFlags(intf)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (cc *CommanderConfig) VersionInfoAdd(info interface{}) {
@@ -119,23 +174,44 @@ func DeclareFlagHandle[T any](
 		b, err := strconv.ParseBool(o.Default)
 		o.Error(err)
 		def = &b
-		long = flag.Bool(o.LongFlag, b, o.Descripton)
-		short = flag.Bool(o.ShortFlag, b, o.Descripton)
+		long = flag.Bool(o.LongFlag, b, o.Help)
+		short = flag.Bool(o.ShortFlag, b, o.Help)
+		if o.AllovedValues != nil {
+			alloved = o.AllovedValues
+		}
+		if o.FuncMatch != nil {
+			funcMatch = o.FuncMatch
+		}
 		optName = helper.FirstLetterToUppercase(o.LongFlag)
+		o.DeclareUsage()
 	case Opt[int]:
 		b, err := strconv.Atoi(o.Default)
 		o.Error(err)
 		def = &b
-		long = flag.Int(o.LongFlag, b, o.Descripton)
-		short = flag.Int(o.ShortFlag, b, o.Descripton)
-		alloved = o.Alloved
+		long = flag.Int(o.LongFlag, b, o.Help)
+		short = flag.Int(o.ShortFlag, b, o.Help)
+		alloved = o.AllovedValues
 		funcMatch = o.FuncMatch
+		if o.AllovedValues != nil {
+			alloved = o.AllovedValues
+		}
+		if o.FuncMatch != nil {
+			funcMatch = o.FuncMatch
+		}
 		optName = helper.FirstLetterToUppercase(o.LongFlag)
+		o.DeclareUsage()
 	case Opt[string]:
 		def = o.Default
-		long = flag.String(o.LongFlag, o.Default, o.Descripton)
-		short = flag.String(o.ShortFlag, o.Default, o.Descripton)
+		long = flag.String(o.LongFlag, o.Default, o.Help)
+		short = flag.String(o.ShortFlag, o.Default, o.Help)
+		if o.AllovedValues != nil {
+			alloved = o.AllovedValues
+		}
+		if o.FuncMatch != nil {
+			funcMatch = o.FuncMatch
+		}
 		optName = helper.FirstLetterToUppercase(o.LongFlag)
+		o.DeclareUsage()
 	default:
 		panic("no match")
 	}
@@ -150,7 +226,19 @@ func (cc *CommanderConfig) DeclareFlags() {
 		op := cc.Opts[i]
 		DeclareFlagHandle[any](op, cc.OptsMap)
 	}
-	// flag.Usage = Usage
+	flag.Usage = Usage
+}
+
+func (o *Opt[T]) DeclareUsage() {
+	slog.Info("declare usaage")
+	fd := o.OptDesc
+	if o.AllovedValues == nil {
+		format := "-%s, -%s\n\t%s\n\n"
+		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Help)
+	} else {
+		format := "-%s, -%s\n\t%s\n\t%v\n\n"
+		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Help, o.AllovedValues)
+	}
 }
 
 func (cc *CommanderConfig) ParseFlags(iface interface{}) error {
@@ -174,11 +262,29 @@ func (cc *CommanderConfig) ParseFlags(iface interface{}) error {
 	return nil
 }
 
+// func (ch *Checker[T]) Check(allovedFunc ) (bool, error) {
+// 	if allovedFunc != nil.(T) {
+// 		// return allovedFunc(inp)
+// 	}
+// 	return true, nil
+// }
+
+func CheckAllovedVals(
+	flagName string, inp any, alloved interface{}, allovedFunc func(any) (bool, error)) (bool, error) {
+	// var match bool
+	if allovedFunc != nil {
+		return allovedFunc(inp)
+	}
+	return true, nil
+}
+
 func (cc *CommanderConfig) ParseFlag(
 	optName string, vofe reflect.Value, index int) error {
 	var ok bool
 	var err error
 	var value any
+	var allovedFunc interface{}
+	var allovedVars interface{}
 	vals, ok := cc.OptsMap[optName]
 	if !ok {
 		slog.Info(
@@ -188,8 +294,17 @@ func (cc *CommanderConfig) ParseFlag(
 	def := vals[0]
 	long := vals[1]
 	short := vals[2]
+	if vals[4] == nil {
+		allovedVars = nil
+	} else {
+		allovedVars = vals[4]
+	}
+	if vals[5] == nil {
+		allovedFunc = nil
+	} else {
+		allovedFunc = vals[5]
+	}
 	// allovedVars := vals[4]
-	allovedFunc := vals[5]
 	slog.Info("parsing flag", "name", optName)
 	v := vofe.Field(index).Interface()
 	switch v.(type) {
@@ -198,15 +313,10 @@ func (cc *CommanderConfig) ParseFlag(
 		res := GetBoolValuePriority(vals...)
 		vofe.Field(index).SetBool(res)
 	case string:
-		vals := []string{*long.(*string), *short.(*string), def.(string)}
-		res := GetStringValuePriority(vals...)
-		if allovedFunc != nil {
-			fun := allovedFunc.(func(string) (bool, error))
-			ok, err = fun(res)
-			if ok {
-				vofe.Field(index).SetString(res)
-			}
-		}
+		valsp := []string{*long.(*string), *short.(*string), def.(string)}
+		res := GetStringValuePriority(valsp...)
+		ch := Checker[string]{allovedVars, allovedFunc}
+		ch.CheckAlloved(res)
 		value = res
 		vofe.Field(index).SetString(res)
 	case int:
@@ -217,12 +327,42 @@ func (cc *CommanderConfig) ParseFlag(
 	default:
 		return fmt.Errorf("unknow flag type: %T", v)
 	}
-
-	if err != nil {
-		return err
-	}
-	if !ok {
-		return fmt.Errorf("falg value not alloved: %v", value)
-	}
 	return nil
+}
+
+// type Checker[T any] struct {
+type Checker[T comparable] struct {
+	AllovedVals any
+	AllovedFunc any
+}
+
+// func (ch *Checker[T]) CheckAlloved(inp T) {
+func (ch *Checker[T]) CheckAlloved(inp any) {
+	if ch.AllovedFunc != nil {
+		ok, err := ch.AllovedFunc.(func(T) (bool, error))(inp.(T))
+		if err != nil {
+			panic(err)
+		}
+		if !ok {
+			panic(fmt.Errorf("value not alloved by allowFunc: %v", inp))
+		}
+	}
+	if ch.AllovedVals == nil {
+		return
+	}
+	var match bool
+	if ch.AllovedVals != nil {
+		vals := ch.AllovedVals.([]T)
+		for _, v := range vals {
+			ipnv := inp.(T)
+			if v == ipnv {
+				match = true
+				break
+			}
+			// res1 := reflect.DeepEqual(v, ipnv)
+		}
+	}
+	if !match {
+		panic(fmt.Errorf("value not alloved by allowedVals: %v", inp))
+	}
 }
