@@ -12,12 +12,11 @@ import (
 )
 
 type RootConfig struct {
-	SourceDirectory string
-	Version         bool
-	Verbose         int
-	DryRun          bool
-	LogType         string
-	DebugConfig     bool
+	Version     bool
+	Verbose     int
+	DryRun      bool
+	LogType     string
+	DebugConfig bool
 }
 
 type OptDesc struct {
@@ -68,6 +67,9 @@ func (cc *CommanderConfig) AddOption2(
 		opt.Help = descr
 		if funcMatch != nil {
 			opt.FuncMatch = funcMatch.(func(string) (bool, error))
+		}
+		if alloved != nil {
+			opt.AllovedValues = alloved.([]string)
 		}
 		cc.Opts = append(cc.Opts, opt)
 	}
@@ -262,13 +264,6 @@ func (cc *CommanderConfig) ParseFlags(iface interface{}) error {
 	return nil
 }
 
-// func (ch *Checker[T]) Check(allovedFunc ) (bool, error) {
-// 	if allovedFunc != nil.(T) {
-// 		// return allovedFunc(inp)
-// 	}
-// 	return true, nil
-// }
-
 func CheckAllovedVals(
 	flagName string, inp any, alloved interface{}, allovedFunc func(any) (bool, error)) (bool, error) {
 	// var match bool
@@ -281,8 +276,6 @@ func CheckAllovedVals(
 func (cc *CommanderConfig) ParseFlag(
 	optName string, vofe reflect.Value, index int) error {
 	var ok bool
-	var err error
-	var value any
 	var allovedFunc interface{}
 	var allovedVars interface{}
 	vals, ok := cc.OptsMap[optName]
@@ -298,13 +291,13 @@ func (cc *CommanderConfig) ParseFlag(
 		allovedVars = nil
 	} else {
 		allovedVars = vals[4]
+		slog.Info("fuckadded vals", "name", optName)
 	}
 	if vals[5] == nil {
 		allovedFunc = nil
 	} else {
 		allovedFunc = vals[5]
 	}
-	// allovedVars := vals[4]
 	slog.Info("parsing flag", "name", optName)
 	v := vofe.Field(index).Interface()
 	switch v.(type) {
@@ -317,7 +310,6 @@ func (cc *CommanderConfig) ParseFlag(
 		res := GetStringValuePriority(valsp...)
 		ch := Checker[string]{allovedVars, allovedFunc}
 		ch.CheckAlloved(res)
-		value = res
 		vofe.Field(index).SetString(res)
 	case int:
 		vals := []int{*long.(*int), *short.(*int), *def.(*int)}
@@ -348,6 +340,7 @@ func (ch *Checker[T]) CheckAlloved(inp any) {
 		}
 	}
 	if ch.AllovedVals == nil {
+		slog.Info("value matched", "value", inp)
 		return
 	}
 	var match bool
@@ -363,6 +356,8 @@ func (ch *Checker[T]) CheckAlloved(inp any) {
 		}
 	}
 	if !match {
-		panic(fmt.Errorf("value not alloved by allowedVals: %v", inp))
+		panic(
+			fmt.Errorf("value not alloved by allowedVals: %v, aloved: %v",
+				inp, ch.AllovedVals))
 	}
 }

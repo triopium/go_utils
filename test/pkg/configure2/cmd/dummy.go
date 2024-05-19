@@ -12,7 +12,7 @@ var commanderDummyConfig = configure.CommanderConfig{}
 func commanderDummyConfigure() {
 	add := commanderDummyConfig.AddOption2
 	add("SourceDirectory", "srcDir", "/tmp", "string",
-		"Source directory", nil, helper.DirectoryExists)
+		"Source directory", []string{"/tmp", "/home"}, helper.DirectoryExists)
 	// "Source directory", []any{"jak", "tak"}, helper.DirectoryExists)
 	// opt := configure.Opt[string]{}
 	// add("DateFrom", "df", "", "date",
