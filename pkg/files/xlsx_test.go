@@ -2,6 +2,7 @@ package files
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 )
 
@@ -68,4 +69,15 @@ func TestXLSXtableStreamSave(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCreateTableTransformColumn(t *testing.T) {
+	rows := [][]string{
+		{"Ahoj", "Mahoj", "Sumak"}, // Column header
+		{"Tahoj", "Bahoj", "Tumak"},
+		{"Kahoj", "Čahoj", "Kakak"},
+		{"Žake", "Lahoj", "Rakak"},
+	}
+	table := CreateTableTransformColumn(rows, 0, 0, strings.ToLower)
+	fmt.Println(table.RowHeaderToColumnMap)
 }

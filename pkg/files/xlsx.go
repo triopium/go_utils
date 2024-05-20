@@ -76,6 +76,34 @@ func (t *Table) MapTableHeaders(
 	}
 }
 
+func CreateTableTransformColumn(rows [][]string,
+	columnHeaderRow, rowHeaderColumn int, transform func(string) string) *Table {
+	table := new(Table)
+	table.MapTableHeadersTransformColumn(rows, columnHeaderRow, rowHeaderColumn, transform)
+	table.Rows = rows[columnHeaderRow+1:][rowHeaderColumn+1:]
+	return table
+}
+
+// MapTableHeadersTransformColumn create map as transformed key to row
+func (t *Table) MapTableHeadersTransformColumn(
+	rows [][]string, columnsHeaderRow, rowsHeaderColumn int, transform func(string) string) {
+	t.RowHeaderToColumnMap = make(map[string][]string)
+	// Map rows
+	r := rows
+	i := columnsHeaderRow + 1
+	for k := i; k < len(r); k++ {
+		key := r[k][rowsHeaderColumn]
+		newKey := transform(key)
+		t.RowHeaderToColumnMap[newKey] = r[k][rowsHeaderColumn+1:]
+	}
+
+	t.ColumnHeaderMap = make(map[string]int)
+	// Map columns header columnName vs position
+	for j, val := range r[rowsHeaderColumn] {
+		t.ColumnHeaderMap[val] = j
+	}
+}
+
 func CreateTableB(rows [][]string,
 	columnHeaderRow, primaryColumn int) *Table {
 	table := new(Table)
