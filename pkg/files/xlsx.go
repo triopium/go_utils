@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"strings"
 
+	"github.com/triopium/go_utils/pkg/helper"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -67,6 +68,11 @@ func (t *Table) MapTableHeaders(
 	i := columnsHeaderRow + 1
 	for k := i; k < len(r); k++ {
 		t.RowHeaderToColumnMap[r[k][rowsHeaderColumn]] = r[k][rowsHeaderColumn+1:]
+		// map keys: first column values (or specified column positon values)
+		// vales: remaining row values
+		// eg: A2->[B2,C2,D2]
+		// eg: B2->[C2,D2,E2,F2]
+		// eg: B3->[C3,D3,E3,F3]
 	}
 
 	t.ColumnHeaderMap = make(map[string]int)
@@ -76,7 +82,7 @@ func (t *Table) MapTableHeaders(
 	}
 }
 
-func CreateTableTransformColumn(rows [][]string,
+func CreateTableTransformRowHeader(rows [][]string,
 	columnHeaderRow, rowHeaderColumn int, transform func(string) string) *Table {
 	table := new(Table)
 	table.MapTableHeadersTransformColumn(rows, columnHeaderRow, rowHeaderColumn, transform)
@@ -186,4 +192,30 @@ func XLSXtableStreamSave(filePath string) error {
 		return err
 	}
 	return nil
+}
+
+func XLSXopenFile(
+	filePath string, overWrite bool,
+) (*excelize.File, func(*excelize.File), error) {
+	var file *excelize.File
+	deferFunc := func(*excelize.File) {
+		err := file.Close()
+		if err != nil {
+			slog.Error("error closing file", "err", err.Error())
+		}
+	}
+	ok, err := helper.FileExists(filePath)
+	if err != nil {
+		return file, deferFunc, err
+	}
+
+	if !ok || overWrite {
+		file = excelize.NewFile()
+	} else {
+		file, err = excelize.OpenFile(filePath)
+		if err != nil {
+			return file, deferFunc, err
+		}
+	}
+	return file, deferFunc, err
 }

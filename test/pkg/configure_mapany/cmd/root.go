@@ -22,7 +22,7 @@ var commandRootConfig = configure.CommanderRoot
 
 func CommandRootRun() {
 	commandRootConfig.VersionInfoAdd(&VersionInfo)
-	commandRootConfig.Init()
 	commandRootConfig.AddSub("dummy", RunCommandDummy)
+	commandRootConfig.Init()
 	commandRootConfig.RunRoot()
 }

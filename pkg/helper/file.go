@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	enc_unicode "golang.org/x/text/encoding/unicode"
 )
@@ -122,4 +123,14 @@ func ReadCSVfile(filePath string) ([][]string, error) {
 	reader := csv.NewReader(file)
 	// reads all the records from the CSV file and return [][]string
 	return reader.ReadAll()
+}
+
+// GetFilenameWithoutExtension
+func FilenameWithoutExtension(filePath string) string {
+	// Get the base name of the file
+	base := filepath.Base(filePath)
+	// Get the file extension
+	ext := filepath.Ext(base)
+	// Remove the extension from the base name
+	return strings.TrimSuffix(base, ext)
 }

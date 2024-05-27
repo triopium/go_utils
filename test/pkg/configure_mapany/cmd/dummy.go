@@ -26,7 +26,7 @@ func commanderDummyConfigure() {
 		"number slice", nil, nil)
 	add("FileName", "fn", "", "string", "",
 		"Source file name", nil, helper.FileExists)
-	add("SourceDirectorySpecial", "sds", "", "string", c.NotNill,
+	add("SourceDirectorySpecial", "sds", "", "string", c.NotNil,
 		"Source file name", nil, helper.DirectoryExists)
 }
 
@@ -58,10 +58,8 @@ type commandDummyVars struct {
 	NumberSlice            []int
 	FileName               string
 	SourceDirectorySpecial string
-	// GirlNames       []string
 	// ChoseVar        string
 	// ChoseFunc       string
-	// Multiple        []string
 }
 
 func RunCommandDummy() {

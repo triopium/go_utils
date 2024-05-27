@@ -78,6 +78,6 @@ func TestCreateTableTransformColumn(t *testing.T) {
 		{"Kahoj", "Čahoj", "Kakak"},
 		{"Žake", "Lahoj", "Rakak"},
 	}
-	table := CreateTableTransformColumn(rows, 0, 0, strings.ToLower)
+	table := CreateTableTransformRowHeader(rows, 0, 0, strings.ToLower)
 	fmt.Println(table.RowHeaderToColumnMap)
 }

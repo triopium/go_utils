@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -14,10 +15,11 @@ import (
 )
 
 const (
-	NotNill string = "not_nill"
+	NotNil string = "NotNil"
 )
 
 type RootConfig struct {
+	GeneralHelp bool
 	Version     bool
 	Verbose     int
 	DryRun      bool
@@ -156,6 +158,9 @@ func (cc *CommanderConfig) AddOption(
 var CommanderRoot = CommanderConfig{
 	Opts: []any{
 		Opt[bool]{
+			OptDesc{"generalHelp", "H", "false", "bool", "",
+				"Get help on all subcommands"}, nil, nil},
+		Opt[bool]{
 			OptDesc{"version", "V", "false", "bool", "",
 				"Version of program."}, nil, nil},
 		Opt[int]{
@@ -193,6 +198,16 @@ func (cc *CommanderConfig) Init() {
 	}
 	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
 	cc.Values = rcfg
+	fmt.Printf("FUCK %+v\n", rcfg)
+	if rcfg.GeneralHelp {
+		fmt.Println("FUCK running help")
+		dir, err := os.Getwd()
+		if err != nil {
+			panic(err)
+		}
+		cc.GenerateManual(dir)
+		return
+	}
 	if flag.NArg() < 1 {
 		cc.VersionInfoPrint()
 		return
@@ -234,6 +249,31 @@ func (cc *CommanderConfig) RunSub(intf interface{}) {
 	err = cc.ParseFlags(intf)
 	if err != nil {
 		panic(err)
+	}
+}
+
+func (cc *CommanderConfig) GenerateManual(pathToMain string) {
+	for name := range cc.Subs {
+		// for _ = range cc.Subs {
+		// Usage()
+		// cc.
+		// _, ok := cc.Subs[name]
+		subCmdFunc := cc.Subs[name]
+		// subCmdFunc := cc.Subs[name]
+		subCmdFunc()
+		// fmt.Println("FKI")
+		// for _ = range cc.Subs {
+		// path := filepath.Join(pathToMain, "main.go")
+		// cmd := exec.Command("go", "run", path, name, "-h", "-v=4")
+		// _ = exec.Command("go", "run", path, name, "-h", "-v=4")
+		// cmd := exec.Command("ls")
+		// fmt.Println("FUCK HELP")
+		// fmt.Println(cmd)
+		// err := cmd.Run()
+		// if err != nil {
+		// panic(err)
+		// }
+		// fmt.Println(cmd.StdoutPipe())
 	}
 }
 
@@ -426,7 +466,7 @@ func (cc *CommanderConfig) ParseFlag(
 	case string:
 		valsp := []string{*long.(*string), *short.(*string), def.(string)}
 		res := GetStringValuePriority(valsp...)
-		if spec == NotNill && res == "" {
+		if spec == NotNil && res == "" {
 			panic(fmt.Errorf("flag: %s value cannot be empty", optName))
 		}
 		if res == "" {

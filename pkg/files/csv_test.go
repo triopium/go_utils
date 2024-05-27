@@ -25,3 +25,24 @@ func TestCSVcompareRows(t *testing.T) {
 		})
 	}
 }
+
+func TestCSVdirToXLSX(t *testing.T) {
+	type args struct {
+		csvFolder string
+		sep       rune
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr bool
+	}{
+		{"tmp", args{"/tmp/test", '\t'}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := CSVdirToXLSX(tt.args.csvFolder, tt.args.sep); (err != nil) != tt.wantErr {
+				t.Errorf("CSVdirToXLSX() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
