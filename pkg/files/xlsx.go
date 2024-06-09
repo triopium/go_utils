@@ -112,6 +112,7 @@ func (t *Table) MapTableHeadersTransformColumn(
 
 func (t *Table) MapTableRowKeyTransform(
 	rows [][]string, columnsHeaderRow, rowsHeaderColumn int, transform func(string) string) {
+	// NOTE: MAKE DEFAULT MAPPIN FUNCTION
 	t.RowHeaderToColumnMap = make(map[string][]string)
 	// Map rows
 	r := rows
