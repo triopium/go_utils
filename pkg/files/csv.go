@@ -48,7 +48,6 @@ func CSVtoXLSX(csvFile string, csvDelim rune) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println(len(records))
 	// Create a new Excel file
 	xlsxFile := excelize.NewFile()
 	sheetName := "Sheet1"
@@ -81,19 +80,11 @@ func CSVdirToXLSX(csvFolder string, csvDelim rune) error {
 	for _, f := range files {
 		ext := filepath.Ext(f)
 		if ext == ".csv" {
-			// fmt.Println(filepath.Base(f))
-			fmt.Println(f)
-			rows, err := CSVreadRows(f, csvDelim)
-			if err != nil {
-				return fmt.Errorf("%w file: %s", err, f)
-			}
-			fmt.Println(len(rows))
 			err = CSVtoXLSX(f, csvDelim)
 			if err != nil {
 				return fmt.Errorf("%w file: %s", err, f)
 			}
 		}
 	}
-	// fmt.Println(files)
 	return nil
 }

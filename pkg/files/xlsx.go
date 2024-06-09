@@ -110,6 +110,25 @@ func (t *Table) MapTableHeadersTransformColumn(
 	}
 }
 
+func (t *Table) MapTableRowKeyTransform(
+	rows [][]string, columnsHeaderRow, rowsHeaderColumn int, transform func(string) string) {
+	t.RowHeaderToColumnMap = make(map[string][]string)
+	// Map rows
+	r := rows
+	i := columnsHeaderRow + 1
+	for k := i; k < len(r); k++ {
+		key := r[k][rowsHeaderColumn]
+		newKey := transform(key)
+		t.RowHeaderToColumnMap[newKey] = r[k][rowsHeaderColumn:]
+	}
+
+	t.ColumnHeaderMap = make(map[string]int)
+	// Map columns header columnName vs position
+	for j, val := range r[rowsHeaderColumn] {
+		t.ColumnHeaderMap[val] = j
+	}
+}
+
 func CreateTableB(rows [][]string,
 	columnHeaderRow, primaryColumn int) *Table {
 	table := new(Table)
