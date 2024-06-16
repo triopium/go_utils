@@ -115,7 +115,7 @@ func ProcessedFileRename(originalPath string) error {
 
 // ReadCSVfile
 func ReadCSVfile(filePath string) ([][]string, error) {
-	file, err := os.Open("Students.csv")
+	file, err := os.Open(filePath)
 	if err != nil {
 		log.Fatal("Error while reading the file", err)
 	}

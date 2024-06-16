@@ -48,14 +48,14 @@ func (tc *TesterConfig) TesterMain(m *testing.M) {
 func (tc *TesterConfig) WaitAdd() {
 	tc.WaitCount++
 	tc.WaitGroup.Add(1)
-	slog.Warn("wait count", "count", tc.WaitCount)
+	slog.Debug("wait count", "count", tc.WaitCount)
 }
 
 // WaitDone
 func (tc *TesterConfig) WaitDone() {
 	tc.WaitGroup.Done()
 	tc.WaitCount--
-	slog.Warn("wait count", "count", tc.WaitCount)
+	slog.Debug("wait count", "count", tc.WaitCount)
 }
 
 // InitMain
@@ -71,7 +71,7 @@ func (tc *TesterConfig) InitMain() {
 		logging.SetLogLevel(level, "json")
 		tc.testType = os.Getenv("GO_TEST_TYPE")
 		flag.Parse()
-		slog.Warn("test config initialized")
+		slog.Debug("test config initialized")
 		tc.sigChan = make(chan os.Signal, 1)
 		tc.WaitGroup = new(sync.WaitGroup)
 		signal.Notify(
@@ -91,7 +91,7 @@ func (tc *TesterConfig) InitMain() {
 func (tc *TesterConfig) WaitForSignal() {
 	slog.Warn("waiting for signal")
 	sig := <-tc.sigChan
-	slog.Warn("interrupting", "signal", sig.String())
+	slog.Info("interrupting", "signal", sig.String())
 	switch sig {
 	case syscall.SIGINT:
 		<-tc.sigChan
@@ -106,7 +106,7 @@ func (tc *TesterConfig) WaitForSignal() {
 			<-tc.sigChan
 		}
 	case syscall.SIGHUP:
-		slog.Warn("test ends")
+		slog.Info("test ends")
 	}
 	tc.WaitDone()
 }
@@ -207,7 +207,7 @@ func (tc *TesterConfig) InitTest(
 	}
 	tc.WaitAdd()
 	tc.InitTempSrc(testSubdir...)
-	slog.Warn("test initialized", "name", t.Name())
+	slog.Debug("test initialized", "name", t.Name())
 }
 
 // RecoverPanic
@@ -236,7 +236,7 @@ func (tc *TesterConfig) RecoverPanicNoFail(t *testing.T) {
 		return
 	}
 	if r := recover(); r != nil {
-		slog.Warn("test recovered panic", "reason", r)
+		slog.Info("test recovered panic", "reason", r)
 		tc.WaitDone()
 		if tc.testType == "manual" {
 			tc.sigChan <- syscall.SIGILL

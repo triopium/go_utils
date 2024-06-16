@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -198,9 +199,7 @@ func (cc *CommanderConfig) Init() {
 	}
 	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
 	cc.Values = rcfg
-	fmt.Printf("FUCK %+v\n", rcfg)
 	if rcfg.GeneralHelp {
-		fmt.Println("FUCK running help")
 		dir, err := os.Getwd()
 		if err != nil {
 			panic(err)
@@ -209,19 +208,27 @@ func (cc *CommanderConfig) Init() {
 		return
 	}
 	if flag.NArg() < 1 {
-		cc.VersionInfoPrint()
-		return
+		slog.Debug("test debug")
+		slog.Info("test info")
+		slog.Warn("test warn")
+		slog.Error("test error")
+		if rcfg.Version {
+			cc.VersionInfoPrint()
+		}
+		if rcfg.DebugConfig {
+			fmt.Printf("%+v\n", rcfg)
+		}
+		os.Exit(0)
 	}
 	slog.Info("root config", "config", rcfg)
 }
 
 func (cc *CommanderConfig) RunRoot() {
-	slog.Info("running root")
 	subCmdName := flag.Arg(0)
 	if subCmdName == "" {
 		return
 	}
-	slog.Info("calling sub", "name", subCmdName)
+	slog.Debug("calling sub", "name", subCmdName)
 	subCmdFunc, ok := cc.Subs[subCmdName]
 	if !ok {
 		panic(fmt.Errorf("unknown subcommand: %s", subCmdName))
@@ -230,7 +237,7 @@ func (cc *CommanderConfig) RunRoot() {
 }
 
 func (cc *CommanderConfig) AddSub(subName string, subF func()) {
-	slog.Info("subcommand added", "subname", subName)
+	slog.Debug("subcommand added", "subname", subName)
 	if cc.Subs == nil {
 		cc.Subs = make(Subcommands)
 	}
@@ -239,7 +246,7 @@ func (cc *CommanderConfig) AddSub(subName string, subF func()) {
 
 func (cc *CommanderConfig) RunSub(intf interface{}) {
 	subcmd := flag.Arg(0)
-	slog.Info("subcommand called", "subcommand", subcmd)
+	slog.Debug("subcommand called", "subcommand", subcmd)
 	FlagsUsage = fmt.Sprintf("subcommand: %s\n", subcmd)
 	cc.DeclareFlags()
 	err := flag.CommandLine.Parse(flag.Args()[1:])
@@ -334,7 +341,7 @@ func DeclareFlagHandle[T any](
 		optName = helper.FirstLetterToUppercase(o.LongFlag)
 		o.DeclareUsage()
 	case Opt[string]:
-		slog.Info("declaring flag", "optname", o.LongFlag)
+		slog.Debug("declaring flag", "optname", o.LongFlag)
 		def = o.Default
 		long = flag.String(o.LongFlag, o.Default, o.Help)
 		short = flag.String(o.ShortFlag, o.Default, o.Help)
@@ -379,10 +386,10 @@ func DeclareFlagHandle[T any](
 }
 
 func (cc *CommanderConfig) DeclareFlags() {
-	slog.Info("declaring flags", "count", len(cc.Opts))
+	slog.Debug("declaring flags", "count", len(cc.Opts))
 	cc.OptsMap = make(map[string][6]interface{})
 	for i := range cc.Opts {
-		slog.Info("declaring flag", "opt", cc.Opts[i])
+		slog.Debug("declaring flag", "opt", cc.Opts[i])
 		op := cc.Opts[i]
 		DeclareFlagHandle[any](op, cc.OptsMap)
 	}
@@ -390,7 +397,7 @@ func (cc *CommanderConfig) DeclareFlags() {
 }
 
 func (o *Opt[T]) DeclareUsage() {
-	slog.Info("declare usage")
+	slog.Debug("declare usage")
 	fd := o.OptDesc
 	if o.AllovedValues == nil {
 		format := "-%s, -%s\n\t%s\n\n"
@@ -402,7 +409,7 @@ func (o *Opt[T]) DeclareUsage() {
 }
 
 func (cc *CommanderConfig) ParseFlags(iface interface{}) error {
-	slog.Info("parsing flags")
+	slog.Debug("parsing flags")
 	vof := reflect.ValueOf(iface)
 	if vof.Kind() != reflect.Ptr || vof.Elem().Kind() != reflect.Struct {
 		return fmt.Errorf("Invalid input: not a pointer to a struct")
@@ -410,7 +417,7 @@ func (cc *CommanderConfig) ParseFlags(iface interface{}) error {
 
 	vofElem := vof.Elem()
 	n := vofElem.NumField()
-	slog.Info("parsing flags", "count", n)
+	slog.Debug("parsing flags", "count", n)
 	for i := 0; i < n; i++ {
 		field := vofElem.Type().Field(i)
 		optName := helper.FirstLetterToUppercase(field.Name)
@@ -456,7 +463,7 @@ func (cc *CommanderConfig) ParseFlag(
 	} else {
 		allovedFunc = vals[5]
 	}
-	slog.Info("parsing flag", "name", optName)
+	slog.Debug("parsing flag", "name", optName)
 	v := vofe.Field(index).Interface()
 	switch v.(type) {
 	case bool:
@@ -473,14 +480,14 @@ func (cc *CommanderConfig) ParseFlag(
 			return nil
 		}
 		ch := Checker[string]{allovedVars, allovedFunc}
-		ch.CheckAlloved(res)
+		ch.CheckAlloved(optName, res)
 		vofe.Field(index).SetString(res)
 	case []string:
 		vals := []string{*long.(*string), *short.(*string), def.(string)}
 		res := GetStringValuePriority(vals...)
 		strSlice := strings.Split(res, ",")
 		ch := CheckerUn[[]string]{allovedVars, allovedFunc}
-		ch.CheckAlloved(strSlice)
+		ch.CheckAlloved(optName, strSlice)
 		rv := reflect.ValueOf(strSlice)
 		vofe.Field(index).Set(rv)
 	case int:
@@ -495,7 +502,7 @@ func (cc *CommanderConfig) ParseFlag(
 			panic(fmt.Errorf("%w: %s", err, res))
 		}
 		ch := CheckerUn[[]int]{allovedVars, allovedFunc}
-		ch.CheckAlloved(out)
+		ch.CheckAlloved(optName, out)
 		rv := reflect.ValueOf(out)
 		vofe.Field(index).Set(rv)
 	case time.Time:
@@ -506,7 +513,7 @@ func (cc *CommanderConfig) ParseFlag(
 		if err != nil {
 			panic(fmt.Errorf("%w: %s", err, res))
 		}
-		ch.CheckAlloved(date)
+		ch.CheckAlloved(optName, date)
 		vofe.Field(index).Set(reflect.ValueOf(date))
 	default:
 		return fmt.Errorf("unknow flag type: %T", v)
@@ -519,7 +526,7 @@ type CheckerUn[T any] struct {
 	AllovedFunc any
 }
 
-func (ch *CheckerUn[T]) CheckAlloved(inp any) {
+func (ch *CheckerUn[T]) CheckAlloved(opt, inp any) {
 	if ch.AllovedFunc != nil {
 		_, err := ch.AllovedFunc.(func(T) (bool, error))(inp.(T))
 		if err != nil {
@@ -535,14 +542,19 @@ type Checker[T comparable] struct {
 }
 
 // func (ch *Checker[T]) CheckAlloved(inp T) {
-func (ch *Checker[T]) CheckAlloved(inp any) {
+func (ch *Checker[T]) CheckAlloved(opt string, inp any) {
 	if ch.AllovedFunc != nil {
 		ok, err := ch.AllovedFunc.(func(T) (bool, error))(inp.(T))
 		if err != nil {
 			panic(err)
 		}
 		if !ok {
-			panic(fmt.Errorf("value not alloved by allowFunc: %v", inp))
+			funcName := runtime.FuncForPC(
+				reflect.ValueOf(ch.AllovedFunc).Pointer()).Name()
+
+			panic(fmt.Errorf(
+				"opt: %s, value: %v not alloved by allowFunc: %v",
+				opt, inp, funcName))
 		}
 	}
 	if ch.AllovedVals == nil {
