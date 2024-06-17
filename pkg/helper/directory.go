@@ -214,7 +214,8 @@ func DirectoryCreateTemporaryOrPanic(baseDirName string) string {
 		file_path, err = os.MkdirTemp("", baseDirName)
 	}
 	if err != nil {
-		panic(err)
+		// panic(err)
+		panic(fmt.Errorf("directory: %s, err: %w", baseDirName, err))
 	}
 	slog.Debug("Temp directory created: " + file_path)
 	return file_path

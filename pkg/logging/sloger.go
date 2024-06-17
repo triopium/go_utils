@@ -45,3 +45,10 @@ func SetLogLevel(level string, logType ...string) {
 	}
 	slog.SetDefault(logger)
 }
+
+func LoggingOutputTest() {
+	slog.Debug("test debug")
+	slog.Info("test info")
+	slog.Warn("test warn")
+	slog.Error("test error")
+}

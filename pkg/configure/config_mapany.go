@@ -25,6 +25,7 @@ type RootConfig struct {
 	Verbose     int
 	DryRun      bool
 	LogType     string
+	LogTest     bool
 	DebugConfig bool
 }
 
@@ -43,12 +44,15 @@ type Opt[T any] struct {
 	FuncMatch     func(v T) (bool, error)
 }
 
+type SubCommands map[string]func()
+
 type CommanderConfig struct {
 	OptsMap     map[string][6]interface{}
 	Opts        []any
-	Subs        Subcommands
+	Subs        SubCommands
 	Values      interface{}
 	VersionInfo interface{}
+	*RootConfig
 }
 
 func (o *Opt[T]) Error(err error) {
@@ -163,7 +167,7 @@ var CommanderRoot = CommanderConfig{
 				"Get help on all subcommands"}, nil, nil},
 		Opt[bool]{
 			OptDesc{"version", "V", "false", "bool", "",
-				"Version of program."}, nil, nil},
+				"Print version of program."}, nil, nil},
 		Opt[int]{
 			OptDesc{"verbose", "v", "0", "int", "",
 				"Level of verbosity."}, nil, nil},
@@ -179,11 +183,10 @@ var CommanderRoot = CommanderConfig{
 			OptDesc{"debugConfig", "dc", "false", "bool", "",
 				"Debug/print flag values"},
 			nil, nil},
-		// Opt[string]{
-		// 	OptDesc{
-		// 		"SourceDirectory", "srcDir", "", "string",
-		// 		"source directory"}, nil, helper.DirectoryExists,
-		// },
+		Opt[bool]{
+			OptDesc{"logTest", "logts", "false", "bool", "",
+				"Print test logs"},
+			nil, nil},
 	},
 }
 
@@ -198,29 +201,33 @@ func (cc *CommanderConfig) Init() {
 		panic(err)
 	}
 	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
-	cc.Values = rcfg
+	// cc.Values = rcfg
+	cc.RootConfig = rcfg
 	if rcfg.GeneralHelp {
 		dir, err := os.Getwd()
 		if err != nil {
 			panic(err)
 		}
 		cc.GenerateManual(dir)
-		return
-	}
-	if flag.NArg() < 1 {
-		slog.Debug("test debug")
-		slog.Info("test info")
-		slog.Warn("test warn")
-		slog.Error("test error")
-		if rcfg.Version {
-			cc.VersionInfoPrint()
-		}
-		if rcfg.DebugConfig {
-			fmt.Printf("%+v\n", rcfg)
-		}
 		os.Exit(0)
 	}
-	slog.Info("root config", "config", rcfg)
+	cc.RootFlagsAct()
+	if flag.NArg() < 1 {
+		os.Exit(0)
+	}
+	cc.RootConfig = rcfg
+}
+
+func (cc *CommanderConfig) RootFlagsAct() {
+	if cc.LogTest {
+		logging.LoggingOutputTest()
+	}
+	if cc.Version {
+		cc.VersionInfoPrint()
+	}
+	if cc.DebugConfig {
+		fmt.Printf("Root config: %+v\n", cc.RootConfig)
+	}
 }
 
 func (cc *CommanderConfig) RunRoot() {
@@ -239,7 +246,7 @@ func (cc *CommanderConfig) RunRoot() {
 func (cc *CommanderConfig) AddSub(subName string, subF func()) {
 	slog.Debug("subcommand added", "subname", subName)
 	if cc.Subs == nil {
-		cc.Subs = make(Subcommands)
+		cc.Subs = make(SubCommands)
 	}
 	cc.Subs[subName] = subF
 }
@@ -445,7 +452,7 @@ func (cc *CommanderConfig) ParseFlag(
 	var allovedVars interface{}
 	vals, ok := cc.OptsMap[optName]
 	if !ok {
-		slog.Info(
+		slog.Debug(
 			"flag not defined for struct field", "field", optName)
 		return nil
 	}
@@ -558,7 +565,6 @@ func (ch *Checker[T]) CheckAlloved(opt string, inp any) {
 		}
 	}
 	if ch.AllovedVals == nil {
-		slog.Info("value matched", "value", inp)
 		return
 	}
 	var match bool

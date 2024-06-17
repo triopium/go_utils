@@ -18,11 +18,11 @@ import (
 // TODO: maybe add t.Error() to recover
 type TesterConfig struct {
 	// Config
-	TestDataSource      string
-	TempDirName         string
-	TempDir             string
-	TempDataSource      string
-	TempDataDestination string
+	TestDataSource string
+	TempDirName    string
+	TempDir        string
+	TempDataSource string
+	TempDataOutput string
 
 	// Internals
 	currentDir      string
@@ -89,9 +89,9 @@ func (tc *TesterConfig) InitMain() {
 
 // WaitForSignal
 func (tc *TesterConfig) WaitForSignal() {
-	slog.Warn("waiting for signal")
+	slog.Debug("waiting for signal")
 	sig := <-tc.sigChan
-	slog.Info("interrupting", "signal", sig.String())
+	slog.Debug("interrupting", "signal", sig.String())
 	switch sig {
 	case syscall.SIGINT:
 		<-tc.sigChan
@@ -121,9 +121,20 @@ func (tc *TesterConfig) InitTempSrc(
 		tc.TempDir = DirectoryCreateTemporaryOrPanic(tc.TempDirName)
 		packageName := filepath.Base(tc.currentDir)
 		tc.TempDataSource = filepath.Join(tc.TempDir, packageName, "SRC")
-		tc.TempDataDestination = filepath.Join(tc.TempDir, packageName, "DST")
+		tc.TempDataOutput = filepath.Join(tc.TempDir, packageName, "DST")
 		tc.initializedTemp = true
 	}
+	createDir := func(folder string) {
+		err := os.MkdirAll(folder, 0700)
+		if err != nil {
+			err1 := fmt.Errorf(
+				"cannot crete output directory: %s, err: %w",
+				tc.TempDataOutput, err)
+			panic(err1)
+		}
+	}
+	// Crete DST temp data output
+	createDir(tc.TempDataOutput)
 	for _, s := range testSubdir {
 		if s == "" {
 			panic(
@@ -135,7 +146,7 @@ func (tc *TesterConfig) InitTempSrc(
 
 		if err1 != nil || !ok {
 			err := fmt.Errorf(
-				"test data source dir path: %s exists %t, err: %w", srcDir, ok, err1)
+				"err: test data source dir path: %s, exists: %t, err1: %w", srcDir, ok, err1)
 			panic(err)
 		}
 		ok, err2 := DirectoryExists(dstDir)
@@ -156,6 +167,8 @@ func (tc *TesterConfig) InitTempSrc(
 			err := fmt.Errorf("cannot copy directory from %s to %s", srcDir, dstDir)
 			panic(err)
 		}
+		outputSubDir := filepath.Join(tc.TempDataOutput, s)
+		createDir(outputSubDir)
 	}
 }
 
@@ -183,7 +196,7 @@ func (tc *TesterConfig) TempSourcePathGeter(tempSubdir string) func(string) stri
 func (tc *TesterConfig) TempDestinationPathGeter(tempSubdir string) func(string) string {
 	return func(relPath string) string {
 		return filepath.Join(
-			tc.TempDataDestination, tempSubdir, relPath)
+			tc.TempDataOutput, tempSubdir, relPath)
 	}
 }
 
