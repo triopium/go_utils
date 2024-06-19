@@ -170,7 +170,7 @@ var CommanderRoot = CommanderConfig{
 				"Print version of program."}, nil, nil},
 		Opt[int]{
 			OptDesc{"verbose", "v", "0", "int", "",
-				"Level of verbosity."}, nil, nil},
+				"Level of verbosity. Lower the number the more verbose is the output. \n\t-v=-2"}, []int{6, 4, 2, 0, -2, -4}, nil},
 		Opt[string]{
 			OptDesc{"logType", "logt", "json", "string", "",
 				"Type of logs formating."},
@@ -407,11 +407,11 @@ func (o *Opt[T]) DeclareUsage() {
 	slog.Debug("declare usage")
 	fd := o.OptDesc
 	if o.AllovedValues == nil {
-		format := "-%s, -%s\n\t%s\n\n"
-		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Help)
+		format := "-%s, -%s=%s\n\t%s\n\n"
+		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Default, fd.Help)
 	} else {
-		format := "-%s, -%s\n\t%s\n\t%v\n\n"
-		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Help, o.AllovedValues)
+		format := "-%s, -%s=%s\n\t%s\n\t%v\n\n"
+		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Default, fd.Help, o.AllovedValues)
 	}
 }
 
@@ -493,7 +493,7 @@ func (cc *CommanderConfig) ParseFlag(
 		vals := []string{*long.(*string), *short.(*string), def.(string)}
 		res := GetStringValuePriority(vals...)
 		strSlice := strings.Split(res, ",")
-		ch := CheckerUn[[]string]{allovedVars, allovedFunc}
+		ch := CheckerUntyped[[]string]{allovedVars, allovedFunc}
 		ch.CheckAlloved(optName, strSlice)
 		rv := reflect.ValueOf(strSlice)
 		vofe.Field(index).Set(rv)
@@ -508,7 +508,7 @@ func (cc *CommanderConfig) ParseFlag(
 		if err != nil {
 			panic(fmt.Errorf("%w: %s", err, res))
 		}
-		ch := CheckerUn[[]int]{allovedVars, allovedFunc}
+		ch := CheckerUntyped[[]int]{allovedVars, allovedFunc}
 		ch.CheckAlloved(optName, out)
 		rv := reflect.ValueOf(out)
 		vofe.Field(index).Set(rv)
@@ -528,12 +528,12 @@ func (cc *CommanderConfig) ParseFlag(
 	return nil
 }
 
-type CheckerUn[T any] struct {
+type CheckerUntyped[T any] struct {
 	AllovedVals any
 	AllovedFunc any
 }
 
-func (ch *CheckerUn[T]) CheckAlloved(opt, inp any) {
+func (ch *CheckerUntyped[T]) CheckAlloved(opt, inp any) {
 	if ch.AllovedFunc != nil {
 		_, err := ch.AllovedFunc.(func(T) (bool, error))(inp.(T))
 		if err != nil {
