@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -20,6 +22,7 @@ const (
 )
 
 type RootConfig struct {
+	Usage       bool
 	GeneralHelp bool
 	Version     bool
 	Verbose     int
@@ -27,6 +30,39 @@ type RootConfig struct {
 	LogType     string
 	LogTest     bool
 	DebugConfig bool
+}
+
+var CommanderRoot = CommanderConfig{
+	Opts: []any{
+		Opt[bool]{
+			OptDesc{"Usage", "U", "false", "bool", "",
+				"Print usage manual"}, nil, nil},
+		Opt[bool]{
+			OptDesc{"generalHelp", "H", "false", "bool", "",
+				"Get help on all subcommands"}, nil, nil},
+		Opt[bool]{
+			OptDesc{"version", "V", "false", "bool", "",
+				"Print version of program."}, nil, nil},
+		Opt[int]{
+			OptDesc{"verbose", "v", "0", "int", "",
+				"Level of verbosity. Lower the number the more verbose is the output."}, []int{6, 4, 2, 0, -2, -4}, nil},
+		Opt[string]{
+			OptDesc{"logType", "logt", "json", "string", "",
+				"Type of logs formating."},
+			[]string{"json", "plain"}, nil},
+		// nil, nil},
+		Opt[bool]{
+			OptDesc{"dryRun", "dr", "false", "bool", "",
+				"Dry run, useful for tests. Avoid any pernament changes to filesystem or any expensive tasks"}, nil, nil},
+		Opt[bool]{
+			OptDesc{"debugConfig", "dc", "false", "bool", "",
+				"Debug/print flag values"},
+			nil, nil},
+		Opt[bool]{
+			OptDesc{"logTest", "logts", "false", "bool", "",
+				"Print test logs"},
+			nil, nil},
+	},
 }
 
 type OptDesc struct {
@@ -160,36 +196,6 @@ func (cc *CommanderConfig) AddOption(
 	}
 }
 
-var CommanderRoot = CommanderConfig{
-	Opts: []any{
-		Opt[bool]{
-			OptDesc{"generalHelp", "H", "false", "bool", "",
-				"Get help on all subcommands"}, nil, nil},
-		Opt[bool]{
-			OptDesc{"version", "V", "false", "bool", "",
-				"Print version of program."}, nil, nil},
-		Opt[int]{
-			OptDesc{"verbose", "v", "0", "int", "",
-				"Level of verbosity. Lower the number the more verbose is the output. \n\t-v=-2"}, []int{6, 4, 2, 0, -2, -4}, nil},
-		Opt[string]{
-			OptDesc{"logType", "logt", "json", "string", "",
-				"Type of logs formating."},
-			[]string{"json", "plain"}, nil},
-		// nil, nil},
-		Opt[bool]{
-			OptDesc{"dryRun", "dr", "false", "bool", "",
-				"Dry run, useful for tests. Avoid any pernament changes to filesystem or any expensive tasks"}, nil, nil},
-		Opt[bool]{
-			OptDesc{"debugConfig", "dc", "false", "bool", "",
-				"Debug/print flag values"},
-			nil, nil},
-		Opt[bool]{
-			OptDesc{"logTest", "logts", "false", "bool", "",
-				"Print test logs"},
-			nil, nil},
-	},
-}
-
 type Subcommander map[string]func()
 
 func (cc *CommanderConfig) Init() {
@@ -201,21 +207,59 @@ func (cc *CommanderConfig) Init() {
 		panic(err)
 	}
 	logging.SetLogLevel(strconv.Itoa(rcfg.Verbose), rcfg.LogType)
-	// cc.Values = rcfg
 	cc.RootConfig = rcfg
-	if rcfg.GeneralHelp {
-		dir, err := os.Getwd()
+}
+
+func (cc *CommanderConfig) PrintHelpForAllCommands() {
+	fmt.Printf("## Root command:\n")
+	path, is := IsCurrentExecutableBinary()
+	fname := filepath.Base(path)
+	cmd := ""
+	if is {
+		cmd = fmt.Sprintf("go run %s.go -h", fname)
+	}
+	if !is {
+		cmd = fmt.Sprintf("./%s -h", fname)
+	}
+	fmt.Printf("  running source: `go run main.go -h`\n")
+	fmt.Printf("  running compiled: `openmedia -h`\n\n")
+	cmds := strings.Split(cmd, " ")
+	cmdexec := exec.Command(cmds[0], cmds[1:]...)
+	resultLog, err := cmdexec.CombinedOutput()
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	fmt.Println(string(resultLog))
+	for i := range cc.Subs {
+		fmt.Printf("## Subcommand: %s\n", i)
+		fmt.Printf(
+			"  running source: `go run main.go %s -h`\n", i)
+		fmt.Printf(
+			"  running compiled: `openmedia %s -h`\n\n", i)
+		cmdexec := exec.Command(cmds[0], cmds[1:]...)
+		resultLog, err := cmdexec.CombinedOutput()
 		if err != nil {
-			panic(err)
+			slog.Error(err.Error())
+			return
 		}
-		cc.GenerateManual(dir)
-		os.Exit(0)
+		fmt.Println(string(resultLog))
 	}
-	cc.RootFlagsAct()
-	if flag.NArg() < 1 {
-		os.Exit(0)
+}
+
+func IsCurrentExecutableBinary() (string, bool) {
+	expath, err := os.Executable()
+	if err != nil {
+		panic(err)
 	}
-	cc.RootConfig = rcfg
+	base := filepath.Base(expath)
+	return expath, base == "main"
+}
+
+func (cc *CommanderConfig) PrintManual() {
+	fmt.Printf("# Help\n\n")
+	cc.PrintHelpForAllCommands()
+	fmt.Printf("# Usage\n\n")
 }
 
 func (cc *CommanderConfig) RootFlagsAct() {
@@ -228,9 +272,19 @@ func (cc *CommanderConfig) RootFlagsAct() {
 	if cc.DebugConfig {
 		fmt.Printf("Root config: %+v\n", cc.RootConfig)
 	}
+	if cc.GeneralHelp {
+		cc.PrintHelpForAllCommands()
+	}
+	if cc.Usage {
+		cc.PrintManual()
+	}
+	if flag.NArg() < 1 {
+		os.Exit(0)
+	}
 }
 
 func (cc *CommanderConfig) RunRoot() {
+	cc.RootFlagsAct()
 	subCmdName := flag.Arg(0)
 	if subCmdName == "" {
 		return
@@ -254,7 +308,8 @@ func (cc *CommanderConfig) AddSub(subName string, subF func()) {
 func (cc *CommanderConfig) RunSub(intf interface{}) {
 	subcmd := flag.Arg(0)
 	slog.Debug("subcommand called", "subcommand", subcmd)
-	FlagsUsage = fmt.Sprintf("subcommand: %s\n", subcmd)
+	// FlagsUsage = fmt.Sprintf("subcommand: %s\n", subcmd)
+	FlagsUsage = ""
 	cc.DeclareFlags()
 	err := flag.CommandLine.Parse(flag.Args()[1:])
 	if err != nil {
@@ -263,31 +318,6 @@ func (cc *CommanderConfig) RunSub(intf interface{}) {
 	err = cc.ParseFlags(intf)
 	if err != nil {
 		panic(err)
-	}
-}
-
-func (cc *CommanderConfig) GenerateManual(pathToMain string) {
-	for name := range cc.Subs {
-		// for _ = range cc.Subs {
-		// Usage()
-		// cc.
-		// _, ok := cc.Subs[name]
-		subCmdFunc := cc.Subs[name]
-		// subCmdFunc := cc.Subs[name]
-		subCmdFunc()
-		// fmt.Println("FKI")
-		// for _ = range cc.Subs {
-		// path := filepath.Join(pathToMain, "main.go")
-		// cmd := exec.Command("go", "run", path, name, "-h", "-v=4")
-		// _ = exec.Command("go", "run", path, name, "-h", "-v=4")
-		// cmd := exec.Command("ls")
-		// fmt.Println("FUCK HELP")
-		// fmt.Println(cmd)
-		// err := cmd.Run()
-		// if err != nil {
-		// panic(err)
-		// }
-		// fmt.Println(cmd.StdoutPipe())
 	}
 }
 
@@ -388,13 +418,16 @@ func DeclareFlagHandle[T any](
 	default:
 		panic("no match")
 	}
-	// myMap[optName] = [6]interface{}{def, long, short, "", alloved, funcMatch}
-	myMap[optName] = [6]interface{}{def, long, short, spec, alloved, funcMatch}
+	myMap[optName] = [6]interface{}{
+		def, long, short, spec, alloved, funcMatch}
 }
 
 func (cc *CommanderConfig) DeclareFlags() {
 	slog.Debug("declaring flags", "count", len(cc.Opts))
 	cc.OptsMap = make(map[string][6]interface{})
+	FlagsUsage += fmt.Sprintf(
+		"-h, -help\n\t%s\n\n",
+		"display this help and exit")
 	for i := range cc.Opts {
 		slog.Debug("declaring flag", "opt", cc.Opts[i])
 		op := cc.Opts[i]
@@ -408,10 +441,12 @@ func (o *Opt[T]) DeclareUsage() {
 	fd := o.OptDesc
 	if o.AllovedValues == nil {
 		format := "-%s, -%s=%s\n\t%s\n\n"
-		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Default, fd.Help)
+		FlagsUsage += fmt.Sprintf(
+			format, fd.ShortFlag, fd.LongFlag, fd.Default, fd.Help)
 	} else {
 		format := "-%s, -%s=%s\n\t%s\n\t%v\n\n"
-		FlagsUsage += fmt.Sprintf(format, fd.ShortFlag, fd.LongFlag, fd.Default, fd.Help, o.AllovedValues)
+		FlagsUsage += fmt.Sprintf(
+			format, fd.ShortFlag, fd.LongFlag, fd.Default, fd.Help, o.AllovedValues)
 	}
 }
 

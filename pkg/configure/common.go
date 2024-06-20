@@ -15,7 +15,8 @@ type VersionInfo struct {
 	BuildTime   string
 }
 
-var FlagsUsage = "Usage:\n"
+// var FlagsUsage = "Usage:\n"
+var FlagsUsage = ""
 
 // Usage called when help command invoked
 func Usage() {
