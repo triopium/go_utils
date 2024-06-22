@@ -215,14 +215,14 @@ func (cc *CommanderConfig) PrintHelpForAllCommands() {
 	path, is := IsCurrentExecutableBinary()
 	fname := filepath.Base(path)
 	cmd := ""
-	if is {
+	if !is {
 		cmd = fmt.Sprintf("go run %s.go -h", fname)
 	}
-	if !is {
+	if is {
 		cmd = fmt.Sprintf("./%s -h", fname)
 	}
-	fmt.Printf("  running source: `go run main.go -h`\n")
-	fmt.Printf("  running compiled: `openmedia -h`\n\n")
+	fmt.Printf("  running source: `go run %s.go -h`\n", fname)
+	fmt.Printf("  running compiled: `%s -h`\n\n", fname)
 	cmds := strings.Split(cmd, " ")
 	cmdexec := exec.Command(cmds[0], cmds[1:]...)
 	resultLog, err := cmdexec.CombinedOutput()
@@ -231,13 +231,21 @@ func (cc *CommanderConfig) PrintHelpForAllCommands() {
 		return
 	}
 	fmt.Println(string(resultLog))
+	cmdsub := ""
 	for i := range cc.Subs {
 		fmt.Printf("## Subcommand: %s\n", i)
 		fmt.Printf(
-			"  running source: `go run main.go %s -h`\n", i)
+			"  running source: `go run %s.go %s -h`\n", fname, i)
 		fmt.Printf(
-			"  running compiled: `openmedia %s -h`\n\n", i)
-		cmdexec := exec.Command(cmds[0], cmds[1:]...)
+			"  running compiled: `%s %s -h`\n\n", fname, i)
+		if !is {
+			cmdsub = fmt.Sprintf("go run %s.go %s -h", fname, i)
+		}
+		if is {
+			cmdsub = fmt.Sprintf("%s %s -h", fname, i)
+		}
+		cmdsubs := strings.Split(cmdsub, " ")
+		cmdexec := exec.Command(cmdsubs[0], cmdsubs[1:]...)
 		resultLog, err := cmdexec.CombinedOutput()
 		if err != nil {
 			slog.Error(err.Error())
@@ -253,7 +261,7 @@ func IsCurrentExecutableBinary() (string, bool) {
 		panic(err)
 	}
 	base := filepath.Base(expath)
-	return expath, base == "main"
+	return expath, base != "main"
 }
 
 func (cc *CommanderConfig) PrintManual() {
@@ -339,8 +347,10 @@ func DeclareFlagHandle[T any](
 		b, err := strconv.ParseBool(o.Default)
 		o.Error(err)
 		def = &b
-		long = flag.Bool(o.LongFlag, b, o.Help)
-		short = flag.Bool(o.ShortFlag, b, o.Help)
+		// long = flag.Bool(o.LongFlag, b, o.Help)
+		// short = flag.Bool(o.ShortFlag, b, o.Help)
+		long = flag.Bool(o.LongFlag, false, o.Help)
+		short = flag.Bool(o.ShortFlag, false, o.Help)
 		if o.AllovedValues != nil {
 			alloved = o.AllovedValues
 		}
@@ -429,7 +439,8 @@ func (cc *CommanderConfig) DeclareFlags() {
 		"-h, -help\n\t%s\n\n",
 		"display this help and exit")
 	for i := range cc.Opts {
-		slog.Debug("declaring flag", "opt", cc.Opts[i])
+		optstr := fmt.Sprintf("%v", cc.Opts[i])
+		slog.Debug("declaring flag", "opt", optstr)
 		op := cc.Opts[i]
 		DeclareFlagHandle[any](op, cc.OptsMap)
 	}
@@ -511,6 +522,12 @@ func (cc *CommanderConfig) ParseFlag(
 	case bool:
 		vals := []bool{*long.(*bool), *short.(*bool), *def.(*bool)}
 		res := GetBoolValuePriority(vals...)
+		if vals[2] && vals[1] {
+			res = false
+		}
+		if vals[2] && vals[0] {
+			res = false
+		}
 		vofe.Field(index).SetBool(res)
 	case string:
 		valsp := []string{*long.(*string), *short.(*string), def.(string)}

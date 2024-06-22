@@ -15,6 +15,7 @@ type ControlFlowAction int
 
 const (
 	Continue ControlFlowAction = iota
+	ErrEncountered
 	Skip
 	Break
 )
