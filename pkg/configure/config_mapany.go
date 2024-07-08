@@ -11,6 +11,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/triopium/go_utils/pkg/helper"
@@ -89,6 +90,8 @@ type CommanderConfig struct {
 	Values      interface{}
 	VersionInfo interface{}
 	*RootConfig
+	GoName  string
+	BinName string
 }
 
 func (o *Opt[T]) Error(err error) {
@@ -210,19 +213,64 @@ func (cc *CommanderConfig) Init() {
 	cc.RootConfig = rcfg
 }
 
-func (cc *CommanderConfig) PrintHelpForAllCommands() {
-	fmt.Printf("## Root command:\n")
+func CommandConstruct(flags string) string {
 	path, is := IsCurrentExecutableBinary()
 	fname := filepath.Base(path)
 	cmd := ""
 	if !is {
-		cmd = fmt.Sprintf("go run %s.go -h", fname)
+		cmd = fmt.Sprintf("go run %s.go %s", fname, flags)
 	}
 	if is {
-		cmd = fmt.Sprintf("./%s -h", fname)
+		cmd = fmt.Sprintf("./%s %s", fname, flags)
 	}
-	fmt.Printf("  running source: `go run %s.go -h`\n", fname)
-	fmt.Printf("  running compiled: `%s -h`\n\n", fname)
+	return cmd
+}
+
+func PrintCommandExample(goName, binName, flags string) {
+	path, is := IsCurrentExecutableBinary()
+	fname := filepath.Base(path)
+	if testing.Testing() {
+		fmt.Printf("running from source:\n")
+		fmt.Printf("```\ngo run %s.go %s\n```\n", goName, flags)
+		fmt.Printf("\n")
+		fmt.Printf("running compiled:\n")
+		fmt.Printf("```\n./%s %s\n```\n", binName, flags)
+		fmt.Printf("\n")
+		return
+	}
+	if !is {
+		fmt.Println("running from source:")
+		fmt.Printf("```\ngo run %s.go %s\n```\n", fname, flags)
+		fmt.Printf("\n")
+		fmt.Println("running compiled:")
+	}
+	wd, err := os.Getwd()
+	fname = filepath.Base(wd)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("```\n./%s %s\n```\n", fname, flags)
+	fmt.Printf("\n")
+}
+
+func GetCommand(flags string) string {
+	path, is := IsCurrentExecutableBinary()
+	fname := filepath.Base(path)
+	var cmd string
+	if is {
+		cmd = fmt.Sprintf("./%s %s", fname, flags)
+	} else {
+		cmd = fmt.Sprintf("go run %s.go -h", fname)
+	}
+	return cmd
+}
+
+func (cc *CommanderConfig) PrintHelpForAllCommands(
+	goName, binName string) {
+	fmt.Printf("## Root command:\n")
+	PrintCommandExample(goName, binName, "-h")
+	cmd := ""
+	cmd = GetCommand("-h")
 	cmds := strings.Split(cmd, " ")
 	cmdexec := exec.Command(cmds[0], cmds[1:]...)
 	resultLog, err := cmdexec.CombinedOutput()
@@ -234,16 +282,8 @@ func (cc *CommanderConfig) PrintHelpForAllCommands() {
 	cmdsub := ""
 	for i := range cc.Subs {
 		fmt.Printf("## Subcommand: %s\n", i)
-		fmt.Printf(
-			"  running source: `go run %s.go %s -h`\n", fname, i)
-		fmt.Printf(
-			"  running compiled: `%s %s -h`\n\n", fname, i)
-		if !is {
-			cmdsub = fmt.Sprintf("go run %s.go %s -h", fname, i)
-		}
-		if is {
-			cmdsub = fmt.Sprintf("%s %s -h", fname, i)
-		}
+		PrintCommandExample(goName, binName, i+" -h")
+		cmdsub = GetCommand("-h")
 		cmdsubs := strings.Split(cmdsub, " ")
 		cmdexec := exec.Command(cmdsubs[0], cmdsubs[1:]...)
 		resultLog, err := cmdexec.CombinedOutput()
@@ -251,7 +291,7 @@ func (cc *CommanderConfig) PrintHelpForAllCommands() {
 			slog.Error(err.Error())
 			return
 		}
-		fmt.Println(string(resultLog))
+		fmt.Printf("%s\n", string(resultLog))
 	}
 }
 
@@ -266,7 +306,7 @@ func IsCurrentExecutableBinary() (string, bool) {
 
 func (cc *CommanderConfig) PrintManual() {
 	fmt.Printf("# Help\n\n")
-	cc.PrintHelpForAllCommands()
+	cc.PrintHelpForAllCommands(cc.GoName, cc.BinName)
 	fmt.Printf("# Usage\n\n")
 }
 
@@ -281,7 +321,7 @@ func (cc *CommanderConfig) RootFlagsAct() {
 		fmt.Printf("Root config: %+v\n", cc.RootConfig)
 	}
 	if cc.GeneralHelp {
-		cc.PrintHelpForAllCommands()
+		cc.PrintHelpForAllCommands(cc.GoName, cc.BinName)
 	}
 	if cc.Usage {
 		cc.PrintManual()
