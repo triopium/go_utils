@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/ncruces/go-strftime"
+	"github.com/snabb/isoweek"
 )
 
 // Sleeper sleeps for specified durration
@@ -19,6 +20,24 @@ func Sleeper(duration int, time_unit string) {
 	default:
 		panic("Wrong time time_unit")
 	}
+}
+
+func ISOweekStart(t time.Time, weeksOffset int) time.Time {
+	// monday=1, saturday=6, sunday=7
+	weekday := isoweek.ISOWeekday(t.Year(), t.Month(), t.Day())
+	daysToAdd := weekday - 1 + 7*weeksOffset
+	isoWeekStart := t.AddDate(0, 0, -daysToAdd)
+	return time.Date(
+		isoWeekStart.Year(), isoWeekStart.Month(), isoWeekStart.Day(),
+		0, 0, 0, 0, isoWeekStart.Location())
+}
+
+func ISOweekStartLocal(weeks int) time.Time {
+	return ISOweekStart(time.Now().Local(), weeks)
+}
+
+func DateCurrentLocal() time.Time {
+	return time.Now().Local()
 }
 
 // IsOlderThanOneISOweek
@@ -95,6 +114,7 @@ func ParseStringDate(dateTime string, loc *time.Location) (time.Time, error) {
 	formats := []string{
 		"2006", "2006-01", "2006-01-02", // date
 		"2006-01-02T15", "2006-01-02T15:04", "2006-01-02T15:04:05", // time
+		"2006-01-02 15:04:05.999999999 -0700 MST",
 	}
 	for _, format := range formats {
 		date, err = time.ParseInLocation(format, dateTime, loc)

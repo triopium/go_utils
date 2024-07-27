@@ -182,12 +182,7 @@ func (tc *TesterConfig) CleanuUP() {
 // TempSourcePathGeter
 func (tc *TesterConfig) TempSourcePathGeter(tempSubdir string) func(string) string {
 	return func(relPath string) string {
-		// var rel string
-		// if relPath == "" || relPath == "." {
-		// rel = string(os.PathSeparator)
-		// }
 		return filepath.Join(
-			// tc.TempDataSource, tempSubdir, rel)
 			tc.TempDataSource, tempSubdir, relPath)
 	}
 }

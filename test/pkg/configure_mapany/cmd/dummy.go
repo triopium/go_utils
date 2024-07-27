@@ -16,6 +16,8 @@ func commanderDummyConfigure() {
 		"Source directory", []string{"/tmp", "/home"}, helper.DirectoryExists)
 	add("GirlNames", "gn", "jana,petra", "[]string", "",
 		"Specified names", nil, AllovedNames)
+	add("GirlNamesAll", "gna", "jana,petra", "[]string", "",
+		"Specified names", nil, nil)
 	add("DateFrom", "df", "2020", "date", "",
 		"date from", nil, nil)
 	add("Resume", "re", "true", "bool", "",
@@ -52,6 +54,7 @@ func ChooseFunction(in any) bool {
 type commandDummyVars struct {
 	SourceDirectory        string
 	GirlNames              []string
+	GirlNamesAll           []string
 	DateFrom               time.Time
 	Resume                 bool
 	Count                  int
@@ -65,7 +68,7 @@ type commandDummyVars struct {
 func RunCommandDummy() {
 	cmdVars := commandDummyVars{}
 	commanderDummyConfigure()
-	commanderDummyConfig.RunSub(&cmdVars)
+	commanderDummyConfig.SubcommandOptionsParse(&cmdVars)
 	fmt.Printf("effective command vars %+v\n", cmdVars)
 	// if cmdVars.Multiple == nil {
 	// fmt.Println("is nil")

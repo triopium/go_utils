@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"bytes"
 	"encoding/csv"
 	"errors"
 	"fmt"
@@ -12,37 +13,153 @@ import (
 	"path/filepath"
 	"strings"
 
+	// _ "unicode"
+
 	enc_unicode "golang.org/x/text/encoding/unicode"
 )
 
 var ErrFilePathExists = errors.New("file path exists")
+var ErrFileEncodingUnknown = errors.New("file encoding name is unknown")
 
-// FileEncodingCode is code, which specifies the file encoding.
-type FileEncodingCode int
+// CharEncoding specifies character encoding in file.
+type CharEncoding string
 
 const (
-	UNKNOWN FileEncodingCode = iota
-	UTF8
-	UTF16le
-	UTF16be
+	CharEncodingUTF8    CharEncoding = "UTF8"
+	CharEncodingUTF16le CharEncoding = "UTF16le"
+	CharEncodingUTF16be CharEncoding = "UTF16be"
 )
+
+type EncodingHandler struct {
+	// ReaderFunc func(io.ReadCloser) io.ReadCloser
+	ReaderFunc func(io.Reader) io.Reader
+}
+
+var CharEncodingMap = map[CharEncoding]EncodingHandler{
+	CharEncodingUTF8:    {FileGetReaderUTF8},
+	CharEncodingUTF16le: {FileGetReaderUTF16le},
+}
+
+func FileOsEncoding(file *os.File) (CharEncoding, error) {
+	// Read the first few bytes to detect the BOM
+	buf := make([]byte, 4)
+	n, err := file.Read(buf)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	// Reset the file read pointer
+	_, err = file.Seek(0, io.SeekStart) // nolint:errcheck
+	if err != nil {
+		return "", err
+	}
+
+	var enc CharEncoding
+	switch {
+	case bytes.HasPrefix(buf[:n], []byte{0xFE, 0xFF}):
+		enc = CharEncodingUTF16be
+		// enc = unicode.UTF16(unicode.BigEndian, unicode.UseBOM)
+	case bytes.HasPrefix(buf[:n], []byte{0xFF, 0xFE}):
+		enc = CharEncodingUTF16le
+		// enc = unicode.UTF16(unicode.LittleEndian, unicode.UseBOM)
+	default:
+		enc = CharEncodingUTF8
+	}
+	// enc.NewDecoder()
+	return enc, nil
+}
+
+func FilePathEncoding(filePath string) (CharEncoding, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+	return FileOsEncoding(file)
+}
+
+func FileReaderHandleEncoding(filePath string) (
+	io.Reader, *os.File, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, err
+	}
+	enc, err := FileOsEncoding(file)
+	if err != nil {
+		file.Close()
+		return nil, nil, err
+	}
+	reader := CharEncodingMap[enc]
+	return reader.ReaderFunc(file), file, nil
+}
+
+func FileReadAllHandleEncoding(filePath string) (
+	[]byte, CharEncoding, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, "", err
+	}
+	defer file.Close()
+	enc, err := FileOsEncoding(file)
+	if err != nil {
+		return nil, "", err
+	}
+	reader := CharEncodingMap[enc]
+	data, err := io.ReadAll(reader.ReaderFunc(file))
+	if err != nil {
+		return nil, "", err
+	}
+	return data, enc, err
+}
+
+func FileGetReaderUTF8(reader io.Reader) io.Reader {
+	// func FileGetReaderUTF8(ioReaderCloser io.ReadCloser) io.ReadCloser {
+	return reader
+}
+
+func FileGetReaderUTF16le(reader io.Reader) io.Reader {
+	// func FileGetReaderUTF16le(reader io.ReadCloser) io.ReadCloser {
+	utf8reader := enc_unicode.UTF16(
+		enc_unicode.LittleEndian,
+		enc_unicode.IgnoreBOM).NewDecoder().Reader(reader)
+	return utf8reader
+}
 
 // HandleFileEncoding read file according to specified file encoding code.
 func HandleFileEncoding(
-	enc FileEncodingCode, ioReaderCloser io.ReadCloser) ([]byte, error) {
+	enc CharEncoding, ioReaderCloser io.ReadCloser) ([]byte, error) {
 	var data []byte
 	var err error
 	switch enc {
-	case UTF8:
+	case CharEncodingUTF8:
 		data, err = io.ReadAll(ioReaderCloser)
-	case UTF16le:
-		utf8reader := enc_unicode.UTF16(enc_unicode.LittleEndian, enc_unicode.IgnoreBOM).NewDecoder().Reader(ioReaderCloser)
+	case CharEncodingUTF16le:
+		utf8reader := enc_unicode.UTF16(
+			enc_unicode.LittleEndian,
+			enc_unicode.IgnoreBOM).NewDecoder().Reader(ioReaderCloser)
 		data, err = io.ReadAll(utf8reader)
 	default:
 		err = fmt.Errorf("unknown encoding")
 	}
 	return data, err
 }
+
+// // HandleFileEncoding read file according to specified file encoding code.
+// func HandleFileEncodingB(
+// 	enc FileEncodingCode, ioReaderCloser io.ReadCloser) ([]byte, error) {
+// 	var data []byte
+// 	var err error
+// 	switch enc {
+// 	case UTF8:
+// 		data, err = io.ReadAll(ioReaderCloser)
+// 	case UTF16le:
+// 		utf8reader := enc_unicode.UTF16(enc_unicode.LittleEndian, enc_unicode.IgnoreBOM).NewDecoder().Reader(ioReaderCloser)
+// 		data, err = io.ReadAll(utf8reader)
+// 	default:
+// 		err = fmt.Errorf("unknown encoding")
+// 	}
+// 	return data, err
+// }
 
 // CopyFile copies file from source path to destination path.
 func CopyFile(

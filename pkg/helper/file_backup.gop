@@ -1,0 +1,53 @@
+
+// type FileReaderHandleEncoding
+
+// const (
+// UNKNOWN FileEncodingCode = iota
+// UTF8
+// UTF16le
+// UTF16be
+// )
+
+// var FileEncodingCodeMap = map[FileEncodingCode]string{
+// UNKNOWN: "UNKNOWN",
+// UTF8:    "UTF8",
+// UTF16le: "UTF16le",
+// UTF16be: "UTF16be",
+// }
+
+// var FileEncodingNameMap = FileEncodingNameMapCreate()
+
+// func FileEncodingNameMapCreate() map[string]FileEncodingCode {
+// nameMap := make(map[string]FileEncodingCode)
+// for key, val := range FileEncodingCodeMap {
+// nameMap[val] = key
+// }
+// return nameMap
+// }
+
+// func EncodingByNameOrPanic(name string) FileEncodingCode {
+// code, ok := FileEncodingNameMap[name]
+// if !ok {
+// panic(fmt.Errorf("%w: %s", ErrFileEncodingUnknown, name))
+// }
+// return code
+// }
+// type FileRead()
+
+
+func FileReadUTF8(ioReaderCloser io.ReadCloser) ([]byte, error) {
+	return io.ReadAll(ioReaderCloser)
+}
+
+func FileReadUTF16le(ioReaderCloser io.ReadCloser) ([]byte, error) {
+	utf8reader := enc_unicode.UTF16(
+		enc_unicode.LittleEndian,
+		enc_unicode.IgnoreBOM).NewDecoder().Reader(ioReaderCloser)
+	return io.ReadAll(utf8reader)
+}
+
+
+// 	file, err := os.Open(filePath)
+// 	if err != nil {
+// 		return "", err
+// 	}

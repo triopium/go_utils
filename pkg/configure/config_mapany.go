@@ -230,19 +230,19 @@ func PrintCommandExample(goName, binName, flags string) {
 	path, is := IsCurrentExecutableBinary()
 	fname := filepath.Base(path)
 	if testing.Testing() {
-		fmt.Printf("running from source:\n")
-		fmt.Printf("```\ngo run %s.go %s\n```\n", goName, flags)
-		fmt.Printf("\n")
-		fmt.Printf("running compiled:\n")
-		fmt.Printf("```\n./%s %s\n```\n", binName, flags)
-		fmt.Printf("\n")
+		fmt.Printf("running from source:\n\n")
+		fmt.Printf("```\ngo run %s.go %s\n```", goName, flags)
+		fmt.Printf("\n\n")
+		fmt.Printf("running compiled:\n\n")
+		fmt.Printf("```\n./%s %s\n```", binName, flags)
+		fmt.Printf("\n\n")
 		return
 	}
 	if !is {
 		fmt.Println("running from source:")
 		fmt.Printf("```\ngo run %s.go %s\n```\n", fname, flags)
 		fmt.Printf("\n")
-		fmt.Println("running compiled:")
+		fmt.Printf("running compiled:\n")
 	}
 	wd, err := os.Getwd()
 	fname = filepath.Base(wd)
@@ -353,7 +353,7 @@ func (cc *CommanderConfig) AddSub(subName string, subF func()) {
 	cc.Subs[subName] = subF
 }
 
-func (cc *CommanderConfig) RunSub(intf interface{}) {
+func (cc *CommanderConfig) SubcommandOptionsParse(intf interface{}) {
 	subcmd := flag.Arg(0)
 	slog.Debug("subcommand called", "subcommand", subcmd)
 	// FlagsUsage = fmt.Sprintf("subcommand: %s\n", subcmd)

@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"log/slog"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -21,6 +22,26 @@ func PathExists(fileSystemPath string) (bool, error) {
 		return false, err
 	}
 	return true, err
+}
+
+func FileDirectoryExists(filePath string) (bool, error) {
+	dir := path.Dir(filePath)
+	return DirectoryExists(dir)
+}
+
+func FilePathNewDestinationValid(filePath string) (bool, error) {
+	ok, err := FileDirectoryExists(filePath)
+	if err != nil || !ok {
+		return false, err
+	}
+	exists, err := FileExists(filePath)
+	if err != nil {
+		return exists, err
+	}
+	if exists {
+		return false, nil
+	}
+	return true, nil
 }
 
 // DirectoryExists report wheter path exists and is directory. Returns error

@@ -71,7 +71,6 @@ func TestGenericFunc3(t *testing.T) {
 }
 
 func TestGenericFunc4(t *testing.T) {
-	sl := []any{}
-	sl = append(sl, Opt[string]{})
-	sl = append(sl, Opt[int]{})
+	sl := []any{Opt[int]{}}
+	sl = append(sl, Opt[string]{}) //nolint:all
 }

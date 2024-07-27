@@ -3,6 +3,7 @@ package helper
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"testing"
 	"time"
 )
@@ -191,4 +192,48 @@ func TestDateGetUTC(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestISOweekStart(t *testing.T) {
+	type args struct {
+		t time.Time
+	}
+	type Test struct {
+		name string
+		args args
+		want time.Weekday
+	}
+	days := 20
+	tests := make([]Test, days)
+	for i := 0; i < days; i++ {
+		hours := time.Duration(24 * i)
+		date := time.Now().Local().Add(time.Hour * hours)
+		tests[i] = Test{strconv.Itoa(i), args{date}, time.Monday}
+	}
+	for w := -54; w < 54; w++ {
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				got := ISOweekStart(tt.args.t, w)
+				fmt.Println("input", tt.args.t)
+				fmt.Println("result", got)
+				if got.Weekday() != tt.want {
+					t.Errorf(
+						"BeginningOfISOWeek().Weekday() = %v, want %v",
+						got.Weekday(), tt.want)
+				}
+			})
+		}
+	}
+}
+
+func TestWeek(t *testing.T) {
+	curLoc := time.Now()
+	fmt.Println(curLoc)
+	fmt.Println(curLoc.UTC())
+	locStart := ISOweekStart(curLoc, 0)
+	fmt.Println(locStart)
+	fmt.Println(locStart.UTC())
+	utcStart := ISOweekStart(curLoc.UTC(), 0)
+	fmt.Println(utcStart)
+	fmt.Println(utcStart.Local())
 }
