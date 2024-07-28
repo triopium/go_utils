@@ -30,8 +30,21 @@ func commanderDummyConfigure() {
 		"Source file name", nil, helper.FileExists)
 	add("SourceDirectorySpecial", "sds", "", "string", c.NotNil,
 		"Source file name", nil, helper.DirectoryExists)
+	add("NumberSliceMap", "nsm", "10,12,13", "[]int", "",
+		"number slice", nil, nil)
+	// add("GirlNamesMap", "gnm", "jana,petra", "map[string]bool", "",
+	add("GirlNamesMap", "gnm", "elvira,jaina", "[]string", "",
+		// "Specified names", nil, nil)
+		"Specified names", []string{"elvira", "jaina"}, nil)
+	// "Specified names", nil, nil)
+	// "Specified names", [][]string{{"elvira"}}, nil)
+	add("GirlNamesSpecific", "gnms", "elvira,jaina", "[]string", "",
+		"Specified names", []string{"elvira", "jaina", "renata"}, nil)
+	add("GirlNameOne", "gno", "elvira,jaina", "string", "",
+		"Specified names", []string{"elvira", "jaina", "renata"}, nil)
 }
 
+// add("GirlNamesMap", "gnm", "jana,petra", "map[string]bool", "",
 func AllovedNames(input []string) (bool, error) {
 	alloved := []string{"jana", "petra", "klara"}
 	allovedMap := make(map[string]bool)
@@ -59,8 +72,13 @@ type commandDummyVars struct {
 	Resume                 bool
 	Count                  int
 	NumberSlice            []int
+	NumberSliceMap         map[int]bool
 	FileName               string
 	SourceDirectorySpecial string
+	GirlNamesMap           map[string]bool
+	GirlNamesSpecific      map[string]bool
+	GirlNameOne            string
+	// GirlNamesMap []string
 	// ChoseVar        string
 	// ChoseFunc       string
 }
