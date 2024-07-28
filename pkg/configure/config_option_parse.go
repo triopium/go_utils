@@ -72,7 +72,6 @@ func (cc *CommanderConfig) ParseFlag(
 		vals := []string{*long.(*string), *short.(*string), def.(string)}
 		res := GetStringValuePriority(vals...)
 		strValues := strings.Split(res, ",")
-
 		ch := CheckerUntyped[[]string]{allovedVars, allovedFunc}
 		switch av := allovedVars.(type) {
 		case [][]string:
@@ -83,9 +82,11 @@ func (cc *CommanderConfig) ParseFlag(
 			ch = CheckerUntyped[[]string]{av, allovedFunc}
 		}
 		ch.CheckAlloved(optName, strValues)
-		strValuesMap := helper.SliceStringToMapString(strValues)
-		rv := reflect.ValueOf(strValuesMap)
-		vofe.Field(index).Set(rv)
+		if res != "" {
+			strValuesMap := helper.SliceStringToMapString(strValues)
+			rv := reflect.ValueOf(strValuesMap)
+			vofe.Field(index).Set(rv)
+		}
 	case int:
 		vals := []int{*long.(*int), *short.(*int), *def.(*int)}
 		res := GetIntValuePriority(vals...)
@@ -119,7 +120,23 @@ func (cc *CommanderConfig) ParseFlag(
 		ch.CheckAlloved(optName, date)
 		vofe.Field(index).Set(reflect.ValueOf(date))
 	default:
-		return fmt.Errorf("unknow flag type: %T", v)
+		// For atomic custom types defined external
+		vals := []string{*long.(*string), *short.(*string), def.(string)}
+		res := GetStringValuePriority(vals...)
+		switch vofe.Field(index).Kind() {
+		case reflect.String:
+			vofe.Field(index).SetString(res)
+		case reflect.Int:
+			var intValue int
+			fmt.Sscanf(res, "%d", &intValue)
+			vofe.Field(index).SetInt(int64(intValue))
+		case reflect.Bool:
+			var boolValue bool
+			fmt.Sscanf(res, "%t", &boolValue)
+			vofe.Field(index).SetBool(boolValue)
+		}
+
+		// return fmt.Errorf("unknow flag type: %T", v)
 	}
 	return nil
 }

@@ -25,8 +25,8 @@ func Sleeper(duration int, time_unit string) {
 func ISOweekStart(t time.Time, weeksOffset int) time.Time {
 	// monday=1, saturday=6, sunday=7
 	weekday := isoweek.ISOWeekday(t.Year(), t.Month(), t.Day())
-	daysToAdd := weekday - 1 + 7*weeksOffset
-	isoWeekStart := t.AddDate(0, 0, -daysToAdd)
+	daysToAdd := -weekday + 1 + 7*weeksOffset
+	isoWeekStart := t.AddDate(0, 0, daysToAdd)
 	return time.Date(
 		isoWeekStart.Year(), isoWeekStart.Month(), isoWeekStart.Day(),
 		0, 0, 0, 0, isoWeekStart.Location())

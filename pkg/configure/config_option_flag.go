@@ -1,5 +1,10 @@
 package configure
 
+// NOTE: try using flag.VisitAll to set values
+// flag.VisitAll(func(f *flag.Flag) {
+// fmt.Printf("Name: %s, Value: %s, Usage: %s\n", f.Name, f.Value, f.Usage)
+// })
+
 import (
 	"flag"
 	"log/slog"
@@ -8,6 +13,9 @@ import (
 
 	"github.com/triopium/go_utils/pkg/helper"
 )
+
+func CheckIfFlagAlreadyDefined() {
+}
 
 func DeclareFlagHandle[T any](
 	s interface{}, myMap map[string][6]interface{}) {
@@ -62,6 +70,7 @@ func DeclareFlagHandle[T any](
 	case Opt[string]:
 		slog.Debug("declaring flag", "optname", o.LongFlag)
 		def = o.Default
+		// NOTE: maybe add warning that the value is parsed again in another struct insance
 		long = flag.String(o.LongFlag, o.Default, o.Help)
 		short = flag.String(o.ShortFlag, o.Default, o.Help)
 		if o.AllovedValues != nil {

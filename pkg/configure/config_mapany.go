@@ -89,8 +89,9 @@ type CommanderConfig struct {
 	Values      interface{}
 	VersionInfo interface{}
 	*RootConfig
-	GoName  string
-	BinName string
+	GoName        string
+	BinName       string
+	FlagsDeclared bool
 }
 
 func (o *Opt[T]) Error(err error) {
@@ -261,12 +262,15 @@ func (cc *CommanderConfig) SubcommandOptionsParse(intf interface{}) {
 	slog.Debug("subcommand called", "subcommand", subcmd)
 	// FlagsUsage = fmt.Sprintf("subcommand: %s\n", subcmd)
 	FlagsUsage = ""
-	cc.DeclareFlags()
-	err := flag.CommandLine.Parse(flag.Args()[1:])
-	if err != nil {
-		panic(err)
+	if !cc.FlagsDeclared {
+		cc.DeclareFlags()
+		err := flag.CommandLine.Parse(flag.Args()[1:])
+		if err != nil {
+			panic(err)
+		}
+		cc.FlagsDeclared = true
 	}
-	err = cc.ParseFlags(intf)
+	err := cc.ParseFlags(intf)
 	if err != nil {
 		panic(err)
 	}
