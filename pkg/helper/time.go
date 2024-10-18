@@ -158,3 +158,9 @@ func CzechDateToUTC(year, month, day, hour int) (
 	)
 	return czechDate.UTC(), nil
 }
+
+func TimeUTClocalOffset(tm time.Time) time.Duration {
+	curTimeloc := tm.UTC().Local().In(time.Local)
+	_, woffset := curTimeloc.Zone()
+	return time.Duration(woffset) * time.Second
+}

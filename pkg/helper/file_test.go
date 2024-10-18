@@ -102,11 +102,11 @@ func TestFileReadAllHandleEncoding(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			data, err := FileReadAllHandleEncoding(tt.args.filePath)
+			data, che, err := FileReadAllHandleEncoding(tt.args.filePath)
 			if err != nil {
 				t.Error(err)
 			}
-			fmt.Println(string(data[0:400]))
+			fmt.Println(che, string(data[0:400]))
 		})
 	}
 }

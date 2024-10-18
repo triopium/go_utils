@@ -93,6 +93,16 @@ func TestDateRangesIntersection(t *testing.T) {
 				time.Date(2024, 3, 11, 0, 0, 0, 0, timeZone)},
 			intersect: false,
 		},
+		{
+			name: "Just intersec from left",
+			r1: [2]time.Time{
+				time.Date(2024, 5, 1, 0, 0, 0, 0, timeZone),
+				time.Date(2024, 6, 1, 0, 0, 0, 0, timeZone)},
+			r2: [2]time.Time{
+				time.Date(2024, 6, 1, 0, 0, 0, 0, timeZone),
+				time.Date(2024, 8, 1, 0, 0, 0, 0, timeZone)},
+			intersect: true,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -192,6 +202,20 @@ func TestDateGetUTC(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetUTCoffset(t *testing.T) {
+	curTime := time.Date(2024, time.January, 1, 0, 0, 0, 0, time.Local).UTC()
+	fmt.Println(curTime)
+	curTimeloc := curTime.Local().In(time.Local)
+	wZoneName, woffset := curTimeloc.Zone()
+	fmt.Println(curTimeloc, wZoneName, woffset)
+
+	curTime = time.Date(2024, time.July, 1, 0, 0, 0, 0, time.Local).UTC()
+	fmt.Println(curTime)
+	curTimeloc = curTime.Local().In(time.Local)
+	wZoneName, woffset = curTimeloc.Zone()
+	fmt.Println(curTimeloc, wZoneName, woffset)
 }
 
 func TestISOweekStart(t *testing.T) {

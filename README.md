@@ -20,3 +20,19 @@ test artifacts created during test.
 ## Go Helper
 
 Various helper functions which helps as shorthand for common tasks.
+
+### Go workspace usage
+
+-add repo dir to workspace file
+go.work
+-------
+go 1.23.2
+
+use (
+	./fulltext
+	./openmedia
+	./omserve
+	~/runs/golang/go2023/go_utils
+)
+
+go work sum

@@ -389,7 +389,6 @@ func (ch *Checker[T]) CheckAlloved(opt string, inp any) {
 		if !ok {
 			funcName := runtime.FuncForPC(
 				reflect.ValueOf(ch.AllovedFunc).Pointer()).Name()
-
 			panic(fmt.Errorf(
 				"opt: %s, value: %v not alloved by allowFunc: %v",
 				opt, inp, funcName))
