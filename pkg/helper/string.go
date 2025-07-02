@@ -39,6 +39,12 @@ func EscapeCSVdelim(value string) string {
 	return out
 }
 
+func EscapeCSVdelimB(value string) string {
+	out := strings.ReplaceAll(value, "\t", "TAB")
+	out = strings.ReplaceAll(out, "\n", "NEW")
+	return out
+}
+
 // XMLprint prints selected node as xml
 func XMLprint(node *xmlquery.Node) {
 	ex := xmlfmt.FormatXML(node.OutputXML(true), "", "\t")

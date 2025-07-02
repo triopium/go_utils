@@ -242,6 +242,19 @@ func ReadCSVfile(filePath string) ([][]string, error) {
 	return reader.ReadAll()
 }
 
+func ReadCSVfileSep(filePath string, sep rune) ([][]string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		log.Fatal("Error while reading the file", err)
+	}
+	defer file.Close()
+	reader := csv.NewReader(file)
+	reader.Comma = sep
+	reader.LazyQuotes = true
+	// reads all the records from the CSV file and return [][]string
+	return reader.ReadAll()
+}
+
 // GetFilenameWithoutExtension
 func FilenameWithoutExtension(filePath string) string {
 	// Get the base name of the file
