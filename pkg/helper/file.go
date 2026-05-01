@@ -218,15 +218,24 @@ func FileExists(filePath string) (bool, error) {
 	return false, err
 }
 
-// ProcessedFileRename adds prfix to original filepath.
-func ProcessedFileRename(originalPath string) error {
+// ProcessedFileRename adds prefix to original filepath.
+func ProcessedFileRename(originalPath, fileNamePrefix string) error {
 	fileName := filepath.Base(originalPath)
 	directory := filepath.Dir(originalPath)
-	newPath := filepath.Join(directory, "processed_"+fileName)
+	newPath := filepath.Join(directory, fileNamePrefix+fileName)
+	slog.Info("renaiming file", "orig", originalPath, "new", newPath)
 	err := os.Rename(originalPath, newPath)
 	if err != nil {
 		return fmt.Errorf("Error renaming file: %s", err)
 	}
+	// _, oldErr := os.Stat(originalPath)
+	// _, newErr := os.Stat(newPath)
+	// if oldErr == nil {
+	// 	panic("old file not properly renamed")
+	// }
+	// if newErr == nil {
+	// 	panic("newfile not created")
+	// }
 	return nil
 }
 

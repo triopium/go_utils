@@ -50,7 +50,7 @@
 !_TAG_PROGRAM_AUTHOR	Universal Ctags Team	//
 !_TAG_PROGRAM_NAME	Universal Ctags	/Derived from Exuberant Ctags/
 !_TAG_PROGRAM_URL	https://ctags.io/	/official site/
-!_TAG_PROGRAM_VERSION	6.2.0	/v6.2.0/
+!_TAG_PROGRAM_VERSION	6.2.1	/v6.2.1/
 !_TAG_ROLE_DESCRIPTION!DTD!element	attOwner	/attributes owner/
 !_TAG_ROLE_DESCRIPTION!DTD!parameterEntity	condition	/conditions/
 !_TAG_ROLE_DESCRIPTION!DTD!parameterEntity	elementName	/element names/
@@ -115,6 +115,7 @@ CommandRootRun	test/pkg/configure_mapany/cmd/root.go	/^func CommandRootRun() {$/
 CommanderConfig	pkg/configure/config_mapany.go	/^type CommanderConfig struct {$/;"	s	package:configure
 CommanderRoot	pkg/configure/config_mapany.go	/^var CommanderRoot = CommanderConfig{$/;"	v	package:configure
 CommonOpts	pkg/configure/populate4.go	/^type CommonOpts struct {$/;"	s	package:configure
+ConfigLogger	pkg/logging/sslog.go	/^func ConfigLogger(input any, halt ...bool) {$/;"	f	package:logging
 Continue	pkg/helper/errors.go	/^	Continue ControlFlowAction = iota$/;"	c	package:helper	typeref:type:ControlFlowAction
 ControlFlowAction	pkg/helper/errors.go	/^type ControlFlowAction int$/;"	t	package:helper	typeref:typename:int
 CopyFields	pkg/configure/config_struct.go	/^func CopyFields(a interface{}, b interface{}) {$/;"	f	package:configure
@@ -197,6 +198,7 @@ Example code to setup dummy subcommand with flags	test/pkg/configure_map/README.
 ExampleXMLrundown	pkg/files/xml_test.go	/^var ExampleXMLrundown = `<?xml version="1.0" encoding="utf-8" standalone="no"?>$/;"	v	package:files
 ExampleXmlLevels	pkg/files/xml_test.go	/^var ExampleXmlLevels = `$/;"	v	package:files
 ExitWithCode	pkg/helper/errors.go	/^func (ecm ErrorsCodeMap) ExitWithCode(err error) {$/;"	f	type:helper.ErrorsCodeMap
+File	pkg/logging/sslog.go	/^	File  string$/;"	m	struct:logging.Where	typeref:typename:string
 FileDirectoryExists	pkg/helper/directory.go	/^func FileDirectoryExists(filePath string) (bool, error) {$/;"	f	package:helper	typeref:typename:(bool, error)
 FileExists	pkg/helper/file.go	/^func FileExists(filePath string) (bool, error) {$/;"	f	package:helper	typeref:typename:(bool, error)
 FileGetReaderUTF16le	pkg/helper/file.go	/^func FileGetReaderUTF16le(reader io.Reader) io.Reader {$/;"	f	package:helper	typeref:typename:io.Reader
@@ -209,6 +211,7 @@ FileReadAllHandleEncoding	pkg/helper/file.go	/^func FileReadAllHandleEncoding(fi
 FileReaderHandleEncoding	pkg/helper/file.go	/^func FileReaderHandleEncoding(filePath string) ($/;"	f	package:helper	typeref:typename:(io.Reader, *os.File, error)
 FilenameWithoutExtension	pkg/helper/file.go	/^func FilenameWithoutExtension(filePath string) string {$/;"	f	package:helper	typeref:typename:string
 FirstLetterToLowercase	pkg/helper/string.go	/^func FirstLetterToLowercase(input string) string {$/;"	f	package:helper	typeref:typename:string
+FirstLetterToUpperCaseCzech	pkg/helper/string.go	/^func FirstLetterToUpperCaseCzech(input string) string {$/;"	f	package:helper	typeref:typename:string
 FirstLetterToUppercase	pkg/helper/string.go	/^func FirstLetterToUppercase(input string) string {$/;"	f	package:helper	typeref:typename:string
 FlagDescription	pkg/configure/config_map.go	/^	FlagDescription$/;"	M	struct:configure.FlagOption	typeref:typename:FlagDescription
 FlagDescription	pkg/configure/config_map.go	/^type FlagDescription struct {$/;"	s	package:configure
@@ -216,6 +219,7 @@ FlagOption	pkg/configure/config_map.go	/^type FlagOption struct {$/;"	s	package:
 FlagsDeclared	pkg/configure/config_mapany.go	/^	FlagsDeclared bool$/;"	m	struct:configure.CommanderConfig	typeref:typename:bool
 FlagsMap	pkg/configure/config_struct.go	/^type FlagsMap map[string]map[string]interface{}$/;"	t	package:configure	typeref:typename:map[string]map[string]interface{}
 FlagsUsage	pkg/configure/common.go	/^var FlagsUsage = ""$/;"	v	package:configure
+Fname	pkg/logging/sslog.go	/^	Fname string$/;"	m	struct:logging.Where	typeref:typename:string
 Fopt	pkg/helper/generic.go	/^type Fopt struct {$/;"	s	package:helper
 ForEachRemaining	pkg/helper/generic.go	/^func (s *MyStruct[T]) ForEachRemaining(action func(T) error) error {$/;"	f	unknown:helper.T	typeref:typename:error
 ForEachRemaining	pkg/helper/generic.go	/^func (s MySlice[T]) ForEachRemaining(action func(T) error) error {$/;"	f	unknown:helper.T	typeref:typename:error
@@ -230,6 +234,7 @@ GetIntValueByPriority	pkg/configure/common.go	/^func GetIntValueByPriority($/;"	
 GetIntValuePriority	pkg/configure/common.go	/^func GetIntValuePriority(vals ...int) int {$/;"	f	package:configure	typeref:typename:int
 GetMessage	pkg/helper/errors.go	/^func (ea *ErrorsAgregate) GetMessage() {$/;"	f	struct:helper.ErrorsAgregate
 GetPackageName	pkg/helper/helper.go	/^func GetPackageName(object any) string {$/;"	f	package:helper	typeref:typename:string
+GetRowIndexByColumnNamePanic	pkg/files/xlsx.go	/^func (t *Table) GetRowIndexByColumnNamePanic(columnName string) int {$/;"	f	struct:files.Table	typeref:typename:int
 GetStringValueByPriority	pkg/configure/common.go	/^func GetStringValueByPriority($/;"	f	package:configure	typeref:typename:string
 GetStringValuePriority	pkg/configure/common.go	/^func GetStringValuePriority(vals ...string) string {$/;"	f	package:configure	typeref:typename:string
 GirlNameOne	test/pkg/configure_mapany/cmd/dummy.go	/^	GirlNameOne            string$/;"	m	struct:cmd.commandDummyVars	typeref:typename:string
@@ -260,9 +265,12 @@ InitMain	pkg/helper/tester.go	/^func (tc *TesterConfig) InitMain() {$/;"	f	struc
 InitTempSrc	pkg/helper/tester.go	/^func (tc *TesterConfig) InitTempSrc($/;"	f	struct:helper.TesterConfig
 InitTest	pkg/helper/tester.go	/^func (tc *TesterConfig) InitTest($/;"	f	struct:helper.TesterConfig
 IsCurrentExecutableBinary	pkg/configure/config_mapany.go	/^func IsCurrentExecutableBinary() (string, bool) {$/;"	f	package:configure	typeref:typename:(string, bool)
+IsFileReadable	pkg/files/general.go	/^func IsFileReadable(path string) (bool, error) {$/;"	f	package:files	typeref:typename:(bool, error)
 IsOlderThanOneISOweek	pkg/helper/time.go	/^func IsOlderThanOneISOweek(dateToCheck, dateNow time.Time) bool {$/;"	f	package:helper	typeref:typename:bool
 Iterator	pkg/helper/generic.go	/^type Iterator[T any] interface {$/;"	t	package:helper	typeref:typename:[T any] interface { ForEachRemaining(action func(T) error) error; }
+JSONpretty	pkg/helper/debug.go	/^func JSONpretty(prefix string, i interface{}) string {$/;"	f	package:helper	typeref:typename:string
 JoinObjectPath	pkg/helper/string.go	/^func JoinObjectPath(oldpath, newpath string) string {$/;"	f	package:helper	typeref:typename:string
+Line	pkg/logging/sslog.go	/^	Line  int$/;"	m	struct:logging.Where	typeref:typename:int
 ListDirFiles	pkg/helper/directory.go	/^func ListDirFiles(dir string) ([]string, error) {$/;"	f	package:helper	typeref:typename:([]string, error)
 LogTest	pkg/configure/config_mapany.go	/^	LogTest     bool$/;"	m	struct:configure.RootConfig	typeref:typename:bool
 LogType	pkg/configure/config_map.go	/^	LogType     string$/;"	m	struct:configure.RootCfg	typeref:typename:string
@@ -310,7 +318,7 @@ PrintManual	pkg/configure/config_mapany.go	/^func (cc *CommanderConfig) PrintMan
 PrintMap	pkg/helper/string.go	/^func PrintMap(input map[string]map[string]string) {$/;"	f	package:helper
 PrintObjectJson	pkg/helper/string.go	/^func PrintObjectJson(prefix string, input any) {$/;"	f	package:helper
 PrintResult	pkg/helper/tester.go	/^func (tc *TesterConfig) PrintResult(a ...any) {$/;"	f	struct:helper.TesterConfig
-ProcessedFileRename	pkg/helper/file.go	/^func ProcessedFileRename(originalPath string) error {$/;"	f	package:helper	typeref:typename:error
+ProcessedFileRename	pkg/helper/file.go	/^func ProcessedFileRename(originalPath, fileNamePrefix string) error {$/;"	f	package:helper	typeref:typename:error
 ProgramName	pkg/configure/common.go	/^	ProgramName string$/;"	m	struct:configure.VersionInfo	typeref:typename:string
 ReadCSVfile	pkg/helper/file.go	/^func ReadCSVfile(filePath string) ([][]string, error) {$/;"	f	package:helper	typeref:typename:([][]string, error)
 ReadCSVfileSep	pkg/helper/file.go	/^func ReadCSVfileSep(filePath string, sep rune) ([][]string, error) {$/;"	f	package:helper	typeref:typename:([][]string, error)
@@ -332,6 +340,7 @@ RunRoot	pkg/configure/config_mapany.go	/^func (cc *CommanderConfig) RunRoot() {$
 RunSub	pkg/configure/config_map.go	/^func (cc *CommandConfig) RunSub(intf interface{}) {$/;"	f	struct:configure.CommandConfig
 Runner	test/pkg/helper/errlist.go	/^func Runner() (res error) {$/;"	f	package:main	typeref:typename:(res error)
 SetField	pkg/configure/config_struct.go	/^func SetField(rv reflect.Value, value any) error {$/;"	f	package:configure	typeref:typename:error
+SetLogLevel	pkg/helper/debug.go	/^func SetLogLevel(level string) {$/;"	f	package:helper
 SetLogLevel	pkg/logging/sloger.go	/^func SetLogLevel(level string, logType ...string) {$/;"	f	package:logging
 SetupRootFlags	pkg/configure/config_struct.go	/^func SetupRootFlags(config interface{}) {$/;"	f	package:configure
 SetupSubFlags	pkg/configure/config_struct.go	/^func SetupSubFlags(config interface{}) {$/;"	f	package:configure
@@ -345,7 +354,9 @@ SourceDirectory	test/pkg/configure_map/cmd/dummy.go	/^	SourceDirectory string$/;
 SourceDirectory	test/pkg/configure_mapany/cmd/dummy.go	/^	SourceDirectory        string$/;"	m	struct:cmd.commandDummyVars	typeref:typename:string
 SourceDirectorySpecial	test/pkg/configure_mapany/cmd/dummy.go	/^	SourceDirectorySpecial string$/;"	m	struct:cmd.commandDummyVars	typeref:typename:string
 Spec	pkg/configure/config_mapany.go	/^	Spec      string$/;"	m	struct:configure.OptDesc	typeref:typename:string
+String	pkg/logging/sslog.go	/^func (w Where) String() string {$/;"	f	struct:logging.Where	typeref:typename:string
 StringToIntSlice	pkg/helper/helper.go	/^func StringToIntSlice(slice, sep string) ([]int, error) {$/;"	f	package:helper	typeref:typename:([]int, error)
+StripDirLevelsFromLeft	pkg/logging/sslog.go	/^func StripDirLevelsFromLeft(full string, levels int) string {$/;"	f	package:logging	typeref:typename:string
 SubCommands	pkg/configure/config_mapany.go	/^type SubCommands map[string]func()$/;"	t	package:configure	typeref:typename:map[string]func()
 SubErrsMap	pkg/helper/erragregate.go	/^	SubErrsMap       map[error]*Errw$/;"	m	struct:helper.Errw	typeref:typename:map[error]*Errw
 SubErrsSlice	pkg/helper/erragregate.go	/^	SubErrsSlice     []*Errw$/;"	m	struct:helper.Errw	typeref:typename:[]*Errw
@@ -428,9 +439,12 @@ TesterMain	pkg/helper/tester.go	/^func (tc *TesterConfig) TesterMain(m *testing.
 TimeCurrent	pkg/helper/time.go	/^func TimeCurrent() string {$/;"	f	package:helper	typeref:typename:string
 TimeUTClocalOffset	pkg/helper/time.go	/^func TimeUTClocalOffset(tm time.Time) time.Duration {$/;"	f	package:helper	typeref:typename:time.Duration
 TraceFunction	pkg/helper/helper.go	/^func TraceFunction(depth int) (string, string, int) {$/;"	f	package:helper	typeref:typename:(string, string, int)
+TraceFunctionLevel	pkg/helper/debug.go	/^func TraceFunctionLevel(lv int) string {$/;"	f	package:helper	typeref:typename:string
+TracePrint	pkg/helper/debug.go	/^func TracePrint(skip int) {$/;"	f	package:helper
 Type	pkg/configure/config_map.go	/^	Type       string$/;"	m	struct:configure.FlagDescription	typeref:typename:string
 Type	pkg/configure/config_mapany.go	/^	Type      string$/;"	m	struct:configure.OptDesc	typeref:typename:string
 UNUSED	pkg/helper/helper.go	/^func UNUSED(x ...interface{}) {}$/;"	f	package:helper
+UnicodeUpperFirst	pkg/helper/string.go	/^func UnicodeUpperFirst(s string) string {$/;"	f	package:helper	typeref:typename:string
 Usage	pkg/configure/common.go	/^func Usage() {$/;"	f	package:configure
 Usage	pkg/configure/config_mapany.go	/^	Usage       bool$/;"	m	struct:configure.RootConfig	typeref:typename:bool
 Values	pkg/configure/config_map.go	/^	Values      interface{}$/;"	m	struct:configure.CommandConfig	typeref:typename:interface{}
@@ -457,6 +471,9 @@ WaitCount	pkg/helper/tester.go	/^	WaitCount       int$/;"	m	struct:helper.Tester
 WaitDone	pkg/helper/tester.go	/^func (tc *TesterConfig) WaitDone() {$/;"	f	struct:helper.TesterConfig
 WaitForSignal	pkg/helper/tester.go	/^func (tc *TesterConfig) WaitForSignal() {$/;"	f	struct:helper.TesterConfig
 WaitGroup	pkg/helper/tester.go	/^	WaitGroup       *sync.WaitGroup$/;"	m	struct:helper.TesterConfig	typeref:typename:*sync.WaitGroup
+Where	pkg/logging/sslog.go	/^type Where struct {$/;"	s	package:logging
+WhereLevel	pkg/logging/sslog.go	/^func WhereLevel(level int) (Where, error) {$/;"	f	package:logging	typeref:typename:(Where, error)
+WhereLevelPrint	pkg/logging/sslog.go	/^func WhereLevelPrint(level int) {$/;"	f	package:logging
 Wrap	pkg/helper/erragregate.go	/^func (er *Errw) Wrap(formatString string, a ...any) (ret error) {$/;"	f	struct:helper.Errw	typeref:typename:(ret error)
 XLSXopenFile	pkg/files/xlsx.go	/^func XLSXopenFile($/;"	f	package:files	typeref:typename:(*excelize.File, func(*excelize.File), error)
 XLSXtableBuild	pkg/files/xlsx.go	/^func XLSXtableBuild(filePath string) error {$/;"	f	package:files	typeref:typename:error
@@ -492,6 +509,7 @@ configure	pkg/configure/populate2.go	/^package configure$/;"	p
 configure	pkg/configure/populate3.go	/^package configure$/;"	p
 configure	pkg/configure/populate4.go	/^package configure$/;"	p
 configure	pkg/configure/populate5.go	/^package configure$/;"	p
+constructLogFileNamePath	pkg/logging/sslog.go	/^func constructLogFileNamePath(full, fn string) string {$/;"	f	package:logging	typeref:typename:string
 currentDir	pkg/helper/tester.go	/^	currentDir      string$/;"	m	struct:helper.TesterConfig	typeref:typename:string
 debug	pkg/configure/populate4.go	/^var debug bool \/\/ Global debug mode$/;"	v	package:configure	typeref:typename:bool
 enc_unicode	pkg/helper/file.go	/^	enc_unicode "golang.org\/x\/text\/encoding\/unicode"$/;"	P	package:golang.org/x/text/encoding/unicode
@@ -499,12 +517,14 @@ err1	test/pkg/helper/errlist.go	/^var err1 = fmt.Errorf("test error")$/;"	v	pack
 failed	pkg/helper/tester.go	/^	failed          bool$/;"	m	struct:helper.TesterConfig	typeref:typename:bool
 files	pkg/files/csv.go	/^package files$/;"	p
 files	pkg/files/csv_test.go	/^package files$/;"	p
+files	pkg/files/general.go	/^package files$/;"	p
 files	pkg/files/xlsx.go	/^package files$/;"	p
 files	pkg/files/xlsx_test.go	/^package files$/;"	p
 files	pkg/files/xml.go	/^package files$/;"	p
 files	pkg/files/xml_test.go	/^package files$/;"	p
 go.work	README.md	/^go.work$/;"	s	chapter:Go Utils
 handle_error_prefix	pkg/helper/errlist.go	/^	handle_error_prefix string = "handle_error"$/;"	c	package:helper	typeref:typename:string
+helper	pkg/helper/debug.go	/^package helper$/;"	p
 helper	pkg/helper/directory.go	/^package helper$/;"	p
 helper	pkg/helper/directory_test.go	/^package helper$/;"	p
 helper	pkg/helper/erragregate.go	/^package helper$/;"	p
@@ -534,6 +554,7 @@ initializedTemp	pkg/helper/tester.go	/^	initializedTemp bool$/;"	m	struct:helper
 loadConfigFile	pkg/configure/populate4.go	/^func loadConfigFile(cfg interface{}) {$/;"	f	package:configure
 logSet	pkg/configure/populate4.go	/^func logSet(field, value, source string) {$/;"	f	package:configure
 logging	pkg/logging/sloger.go	/^package logging$/;"	p
+logging	pkg/logging/sslog.go	/^package logging$/;"	p
 main	test/pkg/configure_map/main.go	/^func main() {$/;"	f	package:main
 main	test/pkg/configure_map/main.go	/^package main$/;"	p
 main	test/pkg/configure_map/main_test.go	/^package main$/;"	p

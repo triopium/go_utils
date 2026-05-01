@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"unicode"
 
 	"github.com/antchfx/xmlquery"
 	"github.com/go-xmlfmt/xmlfmt"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // PrintMap
@@ -57,4 +60,19 @@ func FirstLetterToLowercase(input string) string {
 
 func FirstLetterToUppercase(input string) string {
 	return strings.ToUpper(input[0:1]) + input[1:]
+}
+
+func UnicodeUpperFirst(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	runes := []rune(s)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
+}
+
+func FirstLetterToUpperCaseCzech(input string) string {
+	// works for czech letters
+	return cases.Title(language.Und).String(input)
 }

@@ -1,6 +1,7 @@
 package files
 
 import (
+	"fmt"
 	"log/slog"
 	"strings"
 
@@ -54,10 +55,20 @@ type Table struct {
 
 func CreateTable(rows [][]string,
 	columnHeaderRow, rowHeaderColumn int) *Table {
+	// fmt.Println("fuck [18:00:08]", rows)
 	table := new(Table)
 	table.MapTableHeaders(rows, columnHeaderRow, rowHeaderColumn)
 	table.Rows = rows[columnHeaderRow+1:][rowHeaderColumn+1:]
 	return table
+}
+
+func (t *Table) GetRowIndexByColumnNamePanic(columnName string) int {
+	fmt.Println("fuck [17:53:25]", t.ColumnHeaderMap)
+	idx, ok := t.ColumnHeaderMap[columnName]
+	if !ok {
+		panic(fmt.Errorf("column name not found: %s", columnName))
+	}
+	return idx
 }
 
 func (t *Table) MapTableHeaders(
