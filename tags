@@ -311,7 +311,9 @@ ParseFlags	pkg/configure/config_mapany.go	/^func (cc *CommanderConfig) ParseFlag
 ParseFlags	pkg/configure/config_struct.go	/^func (fm FlagsMap) ParseFlags() error {$/;"	f	type:configure.FlagsMap	typeref:typename:error
 ParseStringDate	pkg/helper/time.go	/^func ParseStringDate(dateTime string, loc *time.Location) (time.Time, error) {$/;"	f	package:helper	typeref:typename:(time.Time, error)
 PathExists	pkg/helper/directory.go	/^func PathExists(fileSystemPath string) (bool, error) {$/;"	f	package:helper	typeref:typename:(bool, error)
-PopulateStruct	pkg/configure/populate4.go	/^func PopulateStruct(cfg interface{}) error {$/;"	f	package:configure	typeref:typename:error
+PopulateStruct	pkg/configure/populate6.go	/^func PopulateStruct(cfg any, debugPrint bool) error {$/;"	f	package:configure	typeref:typename:error
+PopulateStructFatal	pkg/configure/populate4.go	/^func PopulateStructFatal(cfg any, debugPrint bool) {$/;"	f	package:configure
+PopulateStructWorks	pkg/configure/populate4.go	/^func PopulateStructWorks(cfg any, debugPrint bool) error {$/;"	f	package:configure	typeref:typename:error
 PrintCommandExample	pkg/configure/config_mapany.go	/^func PrintCommandExample(goName, binName, flags string) {$/;"	f	package:configure
 PrintHelpForAllCommands	pkg/configure/config_mapany.go	/^func (cc *CommanderConfig) PrintHelpForAllCommands($/;"	f	struct:configure.CommanderConfig
 PrintManual	pkg/configure/config_mapany.go	/^func (cc *CommanderConfig) PrintManual() {$/;"	f	struct:configure.CommanderConfig
@@ -339,9 +341,11 @@ RunRoot	pkg/configure/config_map.go	/^func (cc *CommandConfig) RunRoot() {$/;"	f
 RunRoot	pkg/configure/config_mapany.go	/^func (cc *CommanderConfig) RunRoot() {$/;"	f	struct:configure.CommanderConfig
 RunSub	pkg/configure/config_map.go	/^func (cc *CommandConfig) RunSub(intf interface{}) {$/;"	f	struct:configure.CommandConfig
 Runner	test/pkg/helper/errlist.go	/^func Runner() (res error) {$/;"	f	package:main	typeref:typename:(res error)
+Set	pkg/configure/populate6.go	/^func (v *timeValue) Set(s string) error {$/;"	f	struct:configure.timeValue	typeref:typename:error
 SetField	pkg/configure/config_struct.go	/^func SetField(rv reflect.Value, value any) error {$/;"	f	package:configure	typeref:typename:error
 SetLogLevel	pkg/helper/debug.go	/^func SetLogLevel(level string) {$/;"	f	package:helper
 SetLogLevel	pkg/logging/sloger.go	/^func SetLogLevel(level string, logType ...string) {$/;"	f	package:logging
+SetUsage	pkg/configure/populate4.go	/^func SetUsage(name string) string {$/;"	f	package:configure	typeref:typename:string
 SetupRootFlags	pkg/configure/config_struct.go	/^func SetupRootFlags(config interface{}) {$/;"	f	package:configure
 SetupSubFlags	pkg/configure/config_struct.go	/^func SetupSubFlags(config interface{}) {$/;"	f	package:configure
 ShortFlag	pkg/configure/config_map.go	/^	ShortFlag  string$/;"	m	struct:configure.FlagDescription	typeref:typename:string
@@ -354,7 +358,9 @@ SourceDirectory	test/pkg/configure_map/cmd/dummy.go	/^	SourceDirectory string$/;
 SourceDirectory	test/pkg/configure_mapany/cmd/dummy.go	/^	SourceDirectory        string$/;"	m	struct:cmd.commandDummyVars	typeref:typename:string
 SourceDirectorySpecial	test/pkg/configure_mapany/cmd/dummy.go	/^	SourceDirectorySpecial string$/;"	m	struct:cmd.commandDummyVars	typeref:typename:string
 Spec	pkg/configure/config_mapany.go	/^	Spec      string$/;"	m	struct:configure.OptDesc	typeref:typename:string
+String	pkg/configure/populate6.go	/^func (v *timeValue) String() string {$/;"	f	struct:configure.timeValue	typeref:typename:string
 String	pkg/logging/sslog.go	/^func (w Where) String() string {$/;"	f	struct:logging.Where	typeref:typename:string
+StringPrettyPrint	pkg/logging/sslog.go	/^func (w Where) StringPrettyPrint() {$/;"	f	struct:logging.Where
 StringToIntSlice	pkg/helper/helper.go	/^func StringToIntSlice(slice, sep string) ([]int, error) {$/;"	f	package:helper	typeref:typename:([]int, error)
 StripDirLevelsFromLeft	pkg/logging/sslog.go	/^func StripDirLevelsFromLeft(full string, levels int) string {$/;"	f	package:logging	typeref:typename:string
 SubCommands	pkg/configure/config_mapany.go	/^type SubCommands map[string]func()$/;"	t	package:configure	typeref:typename:map[string]func()
@@ -484,6 +490,7 @@ XMLnodeLevelUp	pkg/files/xml.go	/^func XMLnodeLevelUp(node *xmlquery.Node, level
 XMLprint	pkg/helper/string.go	/^func XMLprint(node *xmlquery.Node) {$/;"	f	package:helper
 XOR	pkg/helper/helper.go	/^func XOR(a, b bool) bool {$/;"	f	package:helper	typeref:typename:bool
 addNew	pkg/helper/erragregate.go	/^func (er *Errw) addNew(err error, params ...any) {$/;"	f	struct:helper.Errw
+bindValue	pkg/configure/populate6.go	/^func bindValue($/;"	f	package:configure
 c	test/pkg/configure_mapany/cmd/dummy.go	/^	c "github.com\/triopium\/go_utils\/pkg\/configure"$/;"	P	package:github.com/triopium/go_utils/pkg/configure
 cmd	test/pkg/configure_map/cmd/dummy.go	/^package cmd$/;"	p
 cmd	test/pkg/configure_map/cmd/root.go	/^package cmd$/;"	p
@@ -508,10 +515,13 @@ configure	pkg/configure/populate.go	/^package configure$/;"	p
 configure	pkg/configure/populate2.go	/^package configure$/;"	p
 configure	pkg/configure/populate3.go	/^package configure$/;"	p
 configure	pkg/configure/populate4.go	/^package configure$/;"	p
+configure	pkg/configure/populate4_back.go	/^package configure$/;"	p
 configure	pkg/configure/populate5.go	/^package configure$/;"	p
+configure	pkg/configure/populate6.go	/^package configure$/;"	p
 constructLogFileNamePath	pkg/logging/sslog.go	/^func constructLogFileNamePath(full, fn string) string {$/;"	f	package:logging	typeref:typename:string
 currentDir	pkg/helper/tester.go	/^	currentDir      string$/;"	m	struct:helper.TesterConfig	typeref:typename:string
 debug	pkg/configure/populate4.go	/^var debug bool \/\/ Global debug mode$/;"	v	package:configure	typeref:typename:bool
+durationType	pkg/configure/populate6.go	/^	durationType  = reflect.TypeOf(time.Duration(0))$/;"	v	package:configure
 enc_unicode	pkg/helper/file.go	/^	enc_unicode "golang.org\/x\/text\/encoding\/unicode"$/;"	P	package:golang.org/x/text/encoding/unicode
 err1	test/pkg/helper/errlist.go	/^var err1 = fmt.Errorf("test error")$/;"	v	package:main
 failed	pkg/helper/tester.go	/^	failed          bool$/;"	m	struct:helper.TesterConfig	typeref:typename:bool
@@ -522,6 +532,7 @@ files	pkg/files/xlsx.go	/^package files$/;"	p
 files	pkg/files/xlsx_test.go	/^package files$/;"	p
 files	pkg/files/xml.go	/^package files$/;"	p
 files	pkg/files/xml_test.go	/^package files$/;"	p
+flagValueType	pkg/configure/populate6.go	/^	flagValueType = reflect.TypeOf((*flag.Value)(nil)).Elem()$/;"	v	package:configure
 go.work	README.md	/^go.work$/;"	s	chapter:Go Utils
 handle_error_prefix	pkg/helper/errlist.go	/^	handle_error_prefix string = "handle_error"$/;"	c	package:helper	typeref:typename:string
 helper	pkg/helper/debug.go	/^package helper$/;"	p
@@ -551,7 +562,7 @@ helper	pkg/helper/time.go	/^package helper$/;"	p
 helper	pkg/helper/time_test.go	/^package helper$/;"	p
 initializedMain	pkg/helper/tester.go	/^	initializedMain bool$/;"	m	struct:helper.TesterConfig	typeref:typename:bool
 initializedTemp	pkg/helper/tester.go	/^	initializedTemp bool$/;"	m	struct:helper.TesterConfig	typeref:typename:bool
-loadConfigFile	pkg/configure/populate4.go	/^func loadConfigFile(cfg interface{}) {$/;"	f	package:configure
+loadConfigFile	pkg/configure/populate6.go	/^func loadConfigFile(cfg any) {$/;"	f	package:configure
 logSet	pkg/configure/populate4.go	/^func logSet(field, value, source string) {$/;"	f	package:configure
 logging	pkg/logging/sloger.go	/^package logging$/;"	p
 logging	pkg/logging/sslog.go	/^package logging$/;"	p
@@ -564,6 +575,9 @@ main	test/pkg/helper/errlist.go	/^func main() {$/;"	f	package:main
 main	test/pkg/helper/errlist.go	/^package main$/;"	p
 setField	pkg/configure/populate4.go	/^func setField(field reflect.Value, value string) {$/;"	f	package:configure
 sigChan	pkg/helper/tester.go	/^	sigChan         chan os.Signal$/;"	m	struct:helper.TesterConfig	typeref:typename:chan os.Signal
+t	pkg/configure/populate6.go	/^	t *time.Time$/;"	m	struct:configure.timeValue	typeref:typename:*time.Time
 testType	pkg/helper/tester.go	/^	testType        string$/;"	m	struct:helper.TesterConfig	typeref:typename:string
 testerConfig	pkg/helper/tester_test.go	/^var testerConfig = TesterConfig{$/;"	v	package:helper
+timeType	pkg/configure/populate6.go	/^	timeType      = reflect.TypeOf(time.Time{})$/;"	v	package:configure
+timeValue	pkg/configure/populate6.go	/^type timeValue struct {$/;"	s	package:configure
 toUpperSnakeCase	pkg/configure/populate4.go	/^func toUpperSnakeCase(input string) string {$/;"	f	package:configure	typeref:typename:string

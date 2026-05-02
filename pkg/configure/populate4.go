@@ -1,15 +1,15 @@
 package configure
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/triopium/go_utils/pkg/logging"
 )
 
 var debug bool // Global debug mode
@@ -19,15 +19,27 @@ type CommonOpts struct {
 	Help    bool
 }
 
+func PopulateStructFatal(cfg any, debugPrint bool) {
+	err := PopulateStruct(cfg, debugPrint)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func SetUsage(name string) string {
+	usage := fmt.Sprintf("Set %s", name)
+	return usage
+}
+
 // PopulateStruct automatically populates a struct from JSON/YAML, env vars, and flags
-func PopulateStruct(cfg interface{}) error {
+func PopulateStructWorks(cfg any, debugPrint bool) error {
 	loadConfigFile(cfg)
 
 	v := reflect.ValueOf(cfg).Elem()
 	t := v.Type()
 
 	flagSet := flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
-	fieldPointers := map[string]interface{}{}
+	fieldPointers := map[string]any{}
 
 	// Enable debug logging if "DEBUG" env is set
 	debug = os.Getenv("DEBUG") == "true"
@@ -48,32 +60,37 @@ func PopulateStruct(cfg interface{}) error {
 		// Step 3: Set up flags
 		flagKey := strings.ToLower(fieldName)
 		switch field.Kind() {
+		case reflect.Bool:
+			ptr := field.Addr().Interface().(*bool)
+			fieldPointers[flagKey] = ptr
+			flagSet.BoolVar(ptr, flagKey, field.Bool(), SetUsage(flagKey))
+
 		case reflect.String:
-			ptr := new(string)
+			ptr := field.Addr().Interface().(*string)
 			fieldPointers[flagKey] = ptr
-			flagSet.StringVar(ptr, flagKey, field.String(), fmt.Sprintf("Set %s", flagKey))
+			flagSet.StringVar(ptr, flagKey, field.String(), SetUsage(flagKey))
+
 		case reflect.Ptr:
-			if field.Type().Elem().Kind() == reflect.String {
-				ptr := new(string)
-				fieldPointers[flagKey] = ptr
-				flagSet.StringVar(ptr, flagKey, "", fmt.Sprintf("Set %s", flagKey))
-			} else if field.Type().Elem().Kind() == reflect.Int {
-				ptr := new(int)
-				fieldPointers[flagKey] = ptr
-				flagSet.IntVar(ptr, flagKey, 0, fmt.Sprintf("Set %s", flagKey))
+			if field.IsNil() {
+				field.Set(reflect.New(field.Type().Elem()))
 			}
+			bindValue(flagSet, flagKey, field.Elem(), fieldType, SetUsage(flagKey))
+
 		case reflect.Int:
-			ptr := new(int)
+			ptr := field.Addr().Interface().(*int)
 			fieldPointers[flagKey] = ptr
-			flagSet.IntVar(ptr, flagKey, int(field.Int()), fmt.Sprintf("Set %s", flagKey))
+			flagSet.IntVar(ptr, flagKey, int(field.Int()), SetUsage(flagKey))
 		case reflect.Slice:
+			fmt.Println("fuck slice [22:39:51]")
 			ptr := new(string)
 			fieldPointers[flagKey] = ptr
-			flagSet.StringVar(ptr, flagKey, "", fmt.Sprintf("Set %s", flagKey))
+			flagSet.StringVar(ptr, flagKey, "", SetUsage(flagKey))
 		}
 
 		// Step 4: Apply default values
 		if field.IsZero() {
+
+			fmt.Println("fuck zero [22:44:47]", flagKey, field.String())
 			defaultValue := fieldType.Tag.Get("envDefault")
 			if defaultValue != "" {
 				logSet(fieldName, defaultValue, "DEFAULT")
@@ -85,27 +102,9 @@ func PopulateStruct(cfg interface{}) error {
 	// Step 5: Parse CLI arguments
 	flagSet.Parse(os.Args[2:])
 
-	// Step 6: Apply CLI flag values (override previous values)
-	for key, ptr := range fieldPointers {
-		field := v.FieldByNameFunc(func(name string) bool {
-			return strings.ToLower(name) == key
-		})
-		if field.IsValid() {
-			switch p := ptr.(type) {
-			case *string:
-				if *p != "" {
-					logSet(field.Type().Name(), *p, "CLI -"+key)
-					setField(field, *p)
-				}
-			case *int:
-				if *p != 0 {
-					logSet(field.Type().Name(), strconv.Itoa(*p), "CLI -"+key)
-					setField(field, strconv.Itoa(*p))
-				}
-			}
-		}
+	if debugPrint {
+		logging.ConfigLogger(cfg)
 	}
-
 	return nil
 }
 
@@ -158,28 +157,6 @@ func setField(field reflect.Value, value string) {
 				}
 			}
 			field.Set(reflect.ValueOf(ints))
-		}
-	}
-}
-
-// Load config file if present (JSON or YAML)
-func loadConfigFile(cfg interface{}) {
-	files := []string{"config.json", "config.yaml"}
-	for _, file := range files {
-		if _, err := os.Stat(file); err == nil {
-			data, err := os.ReadFile(file)
-			if err != nil {
-				fmt.Println("Error reading config file:", err)
-				return
-			}
-			switch {
-			case strings.HasSuffix(file, ".json"):
-				json.Unmarshal(data, cfg)
-			case strings.HasSuffix(file, ".yaml"):
-				yaml.Unmarshal(data, cfg)
-			}
-			fmt.Println("[CONFIG] Loaded from", file)
-			return
 		}
 	}
 }

@@ -19,18 +19,19 @@ type Where struct {
 }
 
 func (w Where) String() string {
-	// return fmt.Sprintf(
-	// 	"file:%s fn:%s ln:%d",
-	// 	w.File,
-	// 	w.Fname,
-	// 	w.Line,
-	// )
 	return fmt.Sprintf(
 		"%s:%s:%d",
 		w.File,
 		w.Fname,
 		w.Line,
 	)
+}
+func (w Where) StringPrettyPrint() {
+	b, err1 := json.MarshalIndent(w, "", "  ")
+	if err1 != nil {
+		log.Fatal(err1)
+	}
+	fmt.Println(string(b))
 }
 
 func WhereLevel(level int) (Where, error) {
@@ -106,12 +107,9 @@ func WhereLevelPrint(level int) {
 // ConfigLogger debug print parsed config, halt after print bool?
 func ConfigLogger(input any, halt ...bool) {
 	w, _ := WhereLevel(2)
-	// fmt.Println(w)
-
 	outputFile := os.Stderr
 	name := reflect.TypeOf(input)
-	fmt.Println()
-	_, err := fmt.Fprintf(outputFile, "%s:%s: %+v\n", w, name, input)
+	_, err := fmt.Fprintf(outputFile, "\n%s:%s: %+v\n", w, name, input)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -119,12 +117,9 @@ func ConfigLogger(input any, halt ...bool) {
 	if err1 != nil {
 		log.Fatal(err1)
 	}
-	fmt.Println()
 	_, err2 := fmt.Fprintf(
-		outputFile, "%s %s %s", w, name, string(b),
+		outputFile, "\n%s %s %s\n", w, name, string(b),
 	)
-	fmt.Println()
-
 	if err2 != nil {
 		log.Fatal(err2)
 	}
